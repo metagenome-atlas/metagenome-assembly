@@ -8,7 +8,7 @@ rule init_pre_assembly_processing:
     output:
         temp(
             expand(
-                "{{sample}}/assembly/reads/QC_{fraction}.fastq.gz",
+                "Intermediate/Assembly/{{sample}}/reads/QC_{fraction}.fastq.gz",
                 fraction=MULTIFILE_FRACTIONS,
             )
         ),
@@ -46,13 +46,13 @@ rule init_pre_assembly_processing:
 rule error_correction:
     input:
         expand(
-            "{{sample}}/assembly/reads/{{previous_steps}}_{fraction}.fastq.gz",
+            "Intermediate/Assembly/{{sample}}/reads/{{previous_steps}}_{fraction}.fastq.gz",
             fraction=MULTIFILE_FRACTIONS,
         ),
     output:
         temp(
             expand(
-                "{{sample}}/assembly/reads/{{previous_steps}}.errorcorr_{fraction}.fastq.gz",
+                "Intermediate/Assembly/{{sample}}/reads/{{previous_steps}}.errorcorr_{fraction}.fastq.gz",
                 fraction=MULTIFILE_FRACTIONS,
             )
         ),
@@ -97,9 +97,9 @@ rule error_correction:
 
 rule merge_pairs:
     input:
-        unpack(lambda wc: {fraction: "{sample}/assembly/reads/{previous_steps}_{fraction}.fastq.gz".format(fraction=fraction,**wc) for fraction in ["R1", "R2"]}),
+        unpack(lambda wc: {fraction: "Intermediate/Assembly/{sample}/reads/{previous_steps}_{fraction}.fastq.gz".format(fraction=fraction,**wc) for fraction in ["R1", "R2"]}),
     output:
-        temp(expand("{{sample}}/assembly/reads/{{previous_steps}}.merged_{fraction}.fastq.gz",fraction = ["R1", "R2","me"])),
+        temp(expand("Intermediate/Assembly/{{sample}}/reads/{{previous_steps}}.merged_{fraction}.fastq.gz",fraction = ["R1", "R2","me"])),
     threads: config.get("threads", 1)
     resources:
         mem=config["mem"],

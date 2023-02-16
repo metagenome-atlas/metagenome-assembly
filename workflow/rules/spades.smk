@@ -18,7 +18,7 @@ assembly_params["spades"] = {"meta": "--meta", "normal": "", "rna": "--rna"}
 
 
 def spades_parameters(wc, input):
-    if not os.path.exists("{sample}/assembly/params.txt".format(sample=wc.sample)):
+    if not os.path.exists("Intermediate/Assembly/{sample}/params.txt".format(sample=wc.sample)):
         params = {}
 
         reads = dict(zip(ASSEMBLY_FRACTIONS, input))
@@ -60,7 +60,7 @@ def spades_parameters(wc, input):
             "longreads": "",
         }
 
-    params["outdir"] = "{sample}/assembly".format(sample=wc.sample)
+    params["outdir"] = "Intermediate/Assembly/{sample}/spades".format(sample=wc.sample)
 
     return params
 
@@ -68,13 +68,13 @@ def spades_parameters(wc, input):
 rule run_spades:
     input:
         expand(
-            "{{sample}}/assembly/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
+            "Intermediate/Assembly/{{sample}}/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
             fraction=ASSEMBLY_FRACTIONS,
             assembly_preprocessing_steps=assembly_preprocessing_steps,
         ),
     output:
-        "{sample}/assembly/contigs.fasta",
-        "{sample}/assembly/scaffolds.fasta",
+        "Intermediate/Assembly/{sample}/spades/contigs.fasta",
+        "Intermediate/Assembly/{sample}/spades/scaffolds.fasta",
     benchmark:
         "logs/benchmarks/assembly/spades/{sample}.txt"
     params:

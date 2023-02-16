@@ -17,14 +17,14 @@ localrules:
 rule merge_se_me_for_megahit:
     input:
         expand(
-            "{{sample}}/assembly/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
+            "Intermediate/Assembly/{{sample}}/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
             fraction=["se", "me"],
             assembly_preprocessing_steps=assembly_preprocessing_steps,
         ),
     output:
         temp(
             expand(
-                "{{sample}}/assembly/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
+                "Intermediate/Assembly/{{sample}}/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
                 fraction=["co"],
                 assembly_preprocessing_steps=assembly_preprocessing_steps,
             )
@@ -49,12 +49,12 @@ def megahit_input_parsing(input):
 rule run_megahit:
     input:
         expand(
-            "{{sample}}/assembly/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
+            "Intermediate/Assembly/{{sample}}/reads/{assembly_preprocessing_steps}_{fraction}.fastq.gz",
             fraction=ASSEMBLY_FRACTIONS,
             assembly_preprocessing_steps=assembly_preprocessing_steps,
         ),
     output:
-        temp("{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"),
+        temp("Intermediate/Assembly/{sample}/megahit/{sample}_prefilter.contigs.fa"),
     benchmark:
         "logs/benchmarks/assembly/megahit/{sample}.txt"
     log:

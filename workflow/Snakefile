@@ -43,9 +43,9 @@ rule assembly_one_sample:
     input:
         "{sample}/{sample}_contigs.fasta",
         "{sample}/sequence_alignment/{sample}.bam",
-        "{sample}/assembly/contig_stats/postfilter_coverage_stats.txt",
-        "{sample}/assembly/contig_stats/prefilter_contig_stats.txt",
-        "{sample}/assembly/contig_stats/final_contig_stats.txt",
+        "Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_stats.txt",
+        "Intermediate/Assembly/{sample}/contig_stats/prefilter_contig_stats.txt",
+        "Intermediate/Assembly/{sample}/contig_stats/final_contig_stats.txt",
     output:
         touch("{sample}/finished_assembly"),
 
@@ -56,15 +56,15 @@ rule assembly_one_sample:
 if config["assembler"] == "megahit":
     
     include: "rules/megahit.smk"
-    raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
+    raw_assembly = "Intermediate/Assembly/{sample}/megahit/{sample}_prefilter.contigs.fa"
 
 elif config["assembler"] == "spades":
     include: "rules/spades.smk"
     
     if config["spades_use_scaffolds"]:
-        raw_assembly = "{sample}/assembly/scaffolds.fasta"
+        raw_assembly = "Intermediate/Assembly/{sample}/spades/scaffolds.fasta"
     else:
-        raw_assembly = "{sample}/assembly/contigs.fasta"
+        raw_assembly = "Intermediate/Assembly/{sample}/spades/contigs.fasta"
 
 else:
     raise ValueError("Invalid assembler specified in config file")

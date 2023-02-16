@@ -3,7 +3,7 @@ rule rename_contigs:
     input:
         raw_assembly,
     output:
-        "{sample}/assembly/{sample}_prefilter_contigs.fasta",
+        "Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
     conda:
         "../envs/bbmap.yaml"
     threads: config.get("simplejob_threads", 1)
@@ -23,9 +23,9 @@ rule rename_contigs:
 
 rule calculate_contigs_stats:
     input:
-        "{sample}/assembly/{sample}_{assembly_step}_contigs.fasta",
+        "Intermediate/Assembly/{sample}/{sample}_{assembly_step}_contigs.fasta",
     output:
-        "{sample}/assembly/contig_stats/{assembly_step}_contig_stats.txt",
+        "Intermediate/Assembly/{sample}/contig_stats/{assembly_step}_contig_stats.txt",
     conda:
         "../envs/bbmap.yaml"
     log:
@@ -41,11 +41,11 @@ rule calculate_contigs_stats:
 rule combine_sample_contig_stats:
     input:
         expand(
-            "{{sample}}/assembly/contig_stats/{assembly_step}_contig_stats.txt",
+            "Intermediate/Assembly/{{sample}}/contig_stats/{assembly_step}_contig_stats.txt",
             assembly_step=["prefilter", "final"],
         ),
     output:
-        "{sample}/assembly/contig_stats.tsv",
+        "Intermediate/Assembly/{sample}/contig_stats.tsv",
     run:
         import os
         import pandas as pd
@@ -81,10 +81,10 @@ if config["filter_contigs"]:
 
     rule pileup_prefilter:
         input:
-            fasta="{sample}/assembly/{sample}_prefilter_contigs.fasta",
+            fasta="Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
             bam="{sample}/sequence_alignment/alignment_to_prefilter_contigs.bam",
         output:
-            covstats="{sample}/assembly/contig_stats/prefilter_coverage_stats.txt",
+            covstats="Intermediate/Assembly/{sample}/contig_stats/prefilter_coverage_stats.txt",
         params:
             pileup_secondary="t",
         log:
@@ -106,11 +106,11 @@ if config["filter_contigs"]:
 
     rule filter_by_coverage:
         input:
-            fasta="{sample}/assembly/{sample}_prefilter_contigs.fasta",
-            covstats="{sample}/assembly/contig_stats/prefilter_coverage_stats.txt",
+            fasta="Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
+            covstats="Intermediate/Assembly/{sample}/contig_stats/prefilter_coverage_stats.txt",
         output:
-            fasta="{sample}/assembly/{sample}_final_contigs.fasta",
-            removed_names="{sample}/assembly/{sample}_discarded_contigs.fasta",
+            fasta="Intermediate/Assembly/{sample}/{sample}_final_contigs.fasta",
+            removed_names="Intermediate/Assembly/{sample}/{sample}_discarded_contigs.fasta",
         params:
             minc=config["minimum_average_coverage"],
             minp=config["minimum_percent_covered_bases"],
@@ -152,7 +152,7 @@ else:  # no filter
         input:
             rules.rename_contigs.output,
         output:
-            "{sample}/assembly/{sample}_final_contigs.fasta",
+            "Intermediate/Assembly/{sample}/{sample}_final_contigs.fasta",
         threads: 1
         shell:
             "cp {input} {output}"
@@ -164,7 +164,7 @@ localrules:
 
 rule finalize_contigs:
     input:
-        "{sample}/assembly/{sample}_final_contigs.fasta",
+        "Intermediate/Assembly/{sample}/{sample}_final_contigs.fasta",
     output:
         "{sample}/{sample}_contigs.fasta",
     threads: 1
@@ -198,9 +198,9 @@ rule pileup_contigs_sample:
         fasta="{sample}/{sample}_contigs.fasta",
         bam="{sample}/sequence_alignment/{sample}.bam",
     output:
-        covhist="{sample}/assembly/contig_stats/postfilter_coverage_histogram.txt",
-        covstats="{sample}/assembly/contig_stats/postfilter_coverage_stats.txt",
-        bincov="{sample}/assembly/contig_stats/postfilter_coverage_binned.txt",
+        covhist="Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_histogram.txt",
+        covstats="Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_stats.txt",
+        bincov="Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_binned.txt",
     params:
         pileup_secondary=(
             "t"
@@ -325,7 +325,7 @@ localrules:
 rule combine_contig_stats:
     input:
         contig_stats=expand(
-            "{sample}/assembly/contig_stats/final_contig_stats.txt", sample=get_all_samples()
+            "Intermediate/Assembly/{sample}/contig_stats/final_contig_stats.txt", sample=get_all_samples()
         ),
         gene_tables=expand(
             "{sample}/annotation/predicted_genes/{sample}.tsv", sample=get_all_samples()
@@ -349,7 +349,7 @@ rule combine_contig_stats:
 """
 localrules:
     build_assembly_report,
-    
+
 rule build_assembly_report:
     input:
         combined_contig_stats="stats/combined_contig_stats.tsv",
