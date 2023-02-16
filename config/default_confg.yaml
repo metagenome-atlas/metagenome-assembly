@@ -1,0 +1,111 @@
+
+
+########################
+# Execution parameters
+########################
+# threads and memory (GB) for most jobs especially from BBtools, which are memory demanding
+threads: 8
+mem: 60
+
+# threads and memory for jobs needing high amount of memory. e.g GTDB-tk,checkm or assembly
+large_mem: 250
+large_threads: 16
+assembly_threads: 8
+assembly_memory: 250
+simplejob_mem: 10
+simplejob_threads: 4
+
+#Runtime only for cluster execution
+runtime: #in h
+    default: 5
+    assembly: 48
+    long: 24
+    simplejob: 1
+
+# Local directory for temp files, useful for cluster execution without shared file system
+tmpdir: /tmp
+# directory where databases are downloaded with 'atlas download'
+database_dir: databases
+
+
+data_type: metagenome # metagenome or metatranscriptome
+interleaved_fastqs: false
+
+
+########################
+# Pre-assembly-processing
+########################
+
+# Advanced Error correction
+error_correction_before_assembly : true
+spades_skip_BayesHammer: true # Skip error correction in spades assembler
+error_correction_kmer: 31 # can be longer e.g. 62 but takes more memory
+
+# remove reads with k-mers that cannot be used for assembly.
+# Filter reads that have a 10% of k-mers below a minimum depth.
+error_correction_remove_lowdepth: false
+error_correction_minimum_kmer_depth: 1 #
+error_correction_aggressive: false
+
+# Merging of pairs
+# join R1 and R2 at overlap; unjoined reads are still utilized
+merge_pairs_before_assembly : true
+merging_k: 62
+
+
+########################
+# Assembly
+########################
+# megahit OR spades
+assembler: spades
+
+minimum_contig_length: 1000
+# Megahit
+#-----------
+# 2 is for metagenomes, 3 for genomes with 30x coverage
+megahit_min_count: 2
+megahit_k_min: 21
+megahit_k_max: 121
+megahit_k_step: 20
+megahit_merge_level: 20,0.98
+megahit_prune_level: 2
+megahit_low_local_ratio: 0.2
+# ['default','meta-large','meta-sensitive']
+megahit_preset: default
+
+# Spades
+#------------
+spades_use_scaffolds: true # if false use contigs
+#Comma-separated list of k-mer sizes to be used (all values must be odd, less than 128 and listed in ascending order).
+spades_k: auto
+spades_preset: meta    # meta, ,normal, rna  single end libraries doesn't work for metaspades
+spades_extra: ""
+longread_type: none # [none,"pacbio", "nanopore", "sanger", "trusted-contigs", "untrusted-contigs"]
+# Preprocessed long reads can be defined in the sample table with 'longreads' , for more info see the spades manual
+
+
+# Filtering
+#------------
+# filter out assembled noise
+# this is more important for assemblys from megahit
+filter_contigs: false
+# trim contig tips
+contig_trim_bp: 0
+# require contigs to have read support
+minimum_average_coverage: 1
+minimum_percent_covered_bases: 20
+minimum_mapped_reads: 0
+
+
+
+
+########################
+# Quantification
+########################
+
+# Mapping reads to contigs
+#--------------------------
+contig_min_id: 0.9
+contig_map_paired_only: true
+contig_max_distance_between_pairs: 1000
+maximum_counted_map_sites: 10
