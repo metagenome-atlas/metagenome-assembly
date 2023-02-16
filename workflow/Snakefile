@@ -2,3 +2,42 @@
 # Please follow the best practices: 
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
 # in particular regarding the standardized folder structure mentioned there. 
+
+
+
+from pathlib import Path
+import pandas as pd
+import sys
+
+# absolute path to snakemake dir
+snakemake_dir = Path(workflow.snakefile).parent.resolve()
+sys.path.append(str(snakemake_dir / "scripts"))
+import utils
+
+
+# include default config values
+configfile: f"{snakemake_dir.parent}/config/default_config.yaml"
+
+
+
+
+include: "rules/functions.smk"
+include: "rules/pre_assembly.smk"
+
+if config.get("assembler", "megahit") == "megahit":
+   
+   include: "rules/megahit.smk"
+
+   raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
+
+else:
+    include: "rules/spades.smk"
+
+
+    if config["spades_use_scaffolds"]:
+        raw_assembly = "{sample}/assembly/scaffolds.fasta"
+    else:
+        raw_assembly = "{sample}/assembly/contigs.fasta"
+
+
+include: "rules/post_assembly.smk"
