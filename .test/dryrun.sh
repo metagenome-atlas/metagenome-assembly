@@ -9,7 +9,7 @@ set -euo pipefail
 test_dir=".test/wd"
 
 
-#rm -rf "$test_dir"
+rm -rf "$test_dir"
 
 
 if [ ! -d "$test_dir" ]; then

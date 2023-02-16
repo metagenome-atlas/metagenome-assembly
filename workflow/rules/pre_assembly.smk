@@ -95,9 +95,9 @@ rule error_correction:
 
 rule merge_pairs:
     input:
-        unpack({fraction: f"{{sample}}/assembly/reads/{{previous_steps}}_{fraction}.fastq.gz" for fraction in ["R1", "R2"]}),
+        unpack(lambda wc: {fraction: "{sample}/assembly/reads/{previous_steps}_{fraction}.fastq.gz".format(fraction=fraction,**wc) for fraction in ["R1", "R2"]}),
     output:
-        temp(unpack({fraction: f"{{sample}}/assembly/reads/{{previous_steps}}.merged_{fraction}.fastq.gz" for fraction in ["R1", "R2","me"]})),
+        temp(expand("{{sample}}/assembly/reads/{{previous_steps}}.merged_{fraction}.fastq.gz",fraction = ["R1", "R2","me"])),
     threads: config.get("threads", 1)
     resources:
         mem=config["mem"],
@@ -118,8 +118,8 @@ rule merge_pairs:
         " bbmerge.sh "
         " -Xmx{resources.java_mem}G threads={threads} "
         " in1={input.R1} in2={input.R2} "
-        " outmerged={output.me} "
-        " outu={output.R1} outu2={output.R2} "
+        " outmerged={output[2]} "
+        " outu={output[0]} outu2={output[1]} "
         " {params.flags} k={params.kmer} "
         " pigz=t unpigz=t "
         " extend2={params.extend2} 2> {log} "
