@@ -10,16 +10,13 @@ import sys
 
 # absolute path to snakemake dir
 snakemake_dir = Path(workflow.snakefile).parent.resolve()
-sys.path.append(str(snakemake_dir / "scripts"))
-import utils
 
 
 # include default config values
-configfile: f"{snakemake_dir.parent}/config/default_config.yaml"
+configfile: snakemake_dir.parent /"config/default_confg.yaml"
 
-
-include: "rules/functions.smk"
 include: "rules/old.smk"
+include: "rules/functions.smk"
 include: "rules/pre_assembly.smk"
 
 
@@ -42,6 +39,16 @@ else:
 include: "rules/post_assembly.smk"
 
 
+### Target rules
+
+
+rule all:
+    input:
+        expand("{sample}/finished_assembly", sample=get_all_samples()),
+    output:
+        temp(touch("finished_assembly")),
+
+
 rule assembly_one_sample:
     input:
         "{sample}/{sample}_contigs.fasta",
@@ -53,8 +60,7 @@ rule assembly_one_sample:
         touch("{sample}/finished_assembly"),
 
 
-rule all:
-    input:
-        expand("{sample}/finished_assembly", sample=SAMPLES),
-    output:
-        temp(touch("finished_assembly")),
+
+
+
+

@@ -202,7 +202,7 @@ rule pileup_contigs_sample:
     params:
         pileup_secondary=(
             "t"
-            if config.get("count_multi_mapped_reads", CONTIG_COUNT_MULTI_MAPPED_READS)
+            if config["count_multi_mapped_reads"]
             else "f"
         ),
     benchmark:
@@ -324,21 +324,21 @@ localrules:
 rule combine_contig_stats:
     input:
         contig_stats=expand(
-            "{sample}/assembly/contig_stats/final_contig_stats.txt", sample=SAMPLES
+            "{sample}/assembly/contig_stats/final_contig_stats.txt", sample=get_all_samples()
         ),
         gene_tables=expand(
-            "{sample}/annotation/predicted_genes/{sample}.tsv", sample=SAMPLES
+            "{sample}/annotation/predicted_genes/{sample}.tsv", sample=get_all_samples()
         ),
         mapping_logs=expand(
             "{sample}/logs/assembly/calculate_coverage/pilup_final_contigs.log",
-            sample=SAMPLES,
+            sample=get_all_samples(),
         ),
         # mapping logs will be incomplete unless we wait on alignment to finish
-        bams=expand("{sample}/sequence_alignment/{sample}.bam", sample=SAMPLES),
+        bams=expand("{sample}/sequence_alignment/{sample}.bam", sample=get_all_samples()),
     output:
         combined_contig_stats="stats/combined_contig_stats.tsv",
     params:
-        samples=SAMPLES,
+        samples=get_all_samples(),
     log:
         "logs/assembly/combine_contig_stats.log",
     script:

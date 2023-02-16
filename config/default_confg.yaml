@@ -29,7 +29,7 @@ database_dir: databases
 
 
 data_type: metagenome # metagenome or metatranscriptome
-interleaved_fastqs: false
+# interleaved_fastqs: false
 
 
 ########################
@@ -44,13 +44,20 @@ error_correction_kmer: 31 # can be longer e.g. 62 but takes more memory
 # remove reads with k-mers that cannot be used for assembly.
 # Filter reads that have a 10% of k-mers below a minimum depth.
 error_correction_remove_lowdepth: false
+error_correction_lowdepth_fraction: 0.5
 error_correction_minimum_kmer_depth: 1 #
 error_correction_aggressive: false
+error_correction_minprob: 0.5  # for memory issues only , I think
+error_correction_kmer: 31
+
+
 
 # Merging of pairs
 # join R1 and R2 at overlap; unjoined reads are still utilized
 merge_pairs_before_assembly : true
 merging_k: 62
+merging_extend2: 50
+merging_flags: "ecct iterations=1"
 
 
 ########################
@@ -106,6 +113,7 @@ minimum_mapped_reads: 0
 # Mapping reads to contigs
 #--------------------------
 contig_min_id: 0.9
+count_multi_mapped_reads: false
 contig_map_paired_only: true
 contig_max_distance_between_pairs: 1000
 maximum_counted_map_sites: 10

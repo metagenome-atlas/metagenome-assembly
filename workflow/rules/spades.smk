@@ -76,7 +76,7 @@ rule run_spades:
         "logs/benchmarks/assembly/spades/{sample}.txt"
     params:
         p=lambda wc, input: spades_parameters(wc, input),
-        k=config.get("spades_k", SPADES_K),
+        k=config["spades_k"]
     log:
         "{sample}/logs/assembly/spades.log",
     conda:

@@ -1,10 +1,10 @@
 import os
-import re
+#import re
 import sys
-from glob import glob
-from snakemake.utils import report
-import warnings
-from copy import deepcopy
+#from glob import glob
+#from snakemake.utils import report
+#import warnings
+#from copy import deepcopy
 
 
 def get_preprocessing_steps(config):
@@ -63,3 +63,12 @@ def io_params_for_tadpole(io, key="in"):
         )
         sys.exit(1)
     return flag
+
+
+### workflow functions
+
+
+def get_all_samples():
+
+    samples= glob_wildcards("{sample}/sequence_quality_control").sample
+    return samples

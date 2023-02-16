@@ -12,11 +12,7 @@ rule init_pre_assembly_processing:
         ),
     params:
         inputs=lambda wc, input: io_params_for_tadpole(input, "in"),
-        interleaved=(
-            lambda wc: "t"
-            if (config.get("interleaved_fastqs", False) & SKIP_QC)
-            else "f"
-        ),
+        interleaved="f",
         outputs=lambda wc, output: io_params_for_tadpole(output, "out"),
         verifypaired="t" if PAIRED_END else "f",
     log:
@@ -99,17 +95,9 @@ rule error_correction:
 
 rule merge_pairs:
     input:
-        expand(
-            "{{sample}}/assembly/reads/{{previous_steps}}_{fraction}.fastq.gz",
-            fraction=["R1", "R2"],
-        ),
+        unpack({fraction: f"{{sample}}/assembly/reads/{{previous_steps}}_{fraction}.fastq.gz" for fraction in ["R1", "R2"]}),
     output:
-        temp(
-            expand(
-                "{{sample}}/assembly/reads/{{previous_steps}}.merged_{fraction}.fastq.gz",
-                fraction=["R1", "R2", "me"],
-            )
-        ),
+        temp(unpack({fraction: f"{{sample}}/assembly/reads/{{previous_steps}}.merged_{fraction}.fastq.gz" for fraction in ["R1", "R2","me"]})),
     threads: config.get("threads", 1)
     resources:
         mem=config["mem"],
@@ -123,16 +111,16 @@ rule merge_pairs:
     shadow:
         "shallow"
     params:
-        kmer=config.get("merging_k", MERGING_K),
-        extend2=config.get("merging_extend2", MERGING_EXTEND2),
-        flags=config.get("merging_flags", MERGING_FLAGS),
+        kmer=config["merging_k"],
+        extend2=config["merging_extend2"],
+        flags=config["merging_flags"],
     shell:
-        """
-        bbmerge.sh -Xmx{resources.java_mem}G threads={threads} \
-            in1={input[0]} in2={input[1]} \
-            outmerged={output[2]} \
-            outu={output[0]} outu2={output[1]} \
-            {params.flags} k={params.kmer} \
-            pigz=t unpigz=t \
-            extend2={params.extend2} 2> {log}
-        """
+        " bbmerge.sh "
+        " -Xmx{resources.java_mem}G threads={threads} "
+        " in1={input.R1} in2={input.R2} "
+        " outmerged={output.me} "
+        " outu={output.R1} outu2={output.R2} "
+        " {params.flags} k={params.kmer} "
+        " pigz=t unpigz=t "
+        " extend2={params.extend2} 2> {log} "
+

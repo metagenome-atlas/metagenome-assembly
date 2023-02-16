@@ -1,3 +1,5 @@
+'''
+
 PAIRED_END = sampleTable.columns.str.contains("R2").any() or config.get(
     "interleaved_fastqs", False
 )
@@ -62,3 +64,20 @@ def get_quality_controlled_reads(wildcards, include_se=False):
             fraction=Fractions,
             sample=wildcards.sample,
         )
+
+'''
+## new
+
+PAIRED_END = True
+MULTIFILE_FRACTIONS= ["R1", "R2", "se"] if PAIRED_END else ["se"]
+JAVA_MEM_FRACTION = 0.85
+
+def get_quality_controlled_reads(wildcards):
+
+    return expand(
+        "{sample}/sequence_quality_control/{sample}_QC_{fraction}.fastq.gz",
+        fraction=MULTIFILE_FRACTIONS,
+        sample=wildcards.sample,
+    )
+
+
