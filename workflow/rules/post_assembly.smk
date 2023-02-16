@@ -319,7 +319,6 @@ rule get_contigs_from_gene_names:
 
 
 localrules:
-    build_assembly_report,
     combine_contig_stats,
 
 
@@ -348,6 +347,9 @@ rule combine_contig_stats:
 
 
 """
+localrules:
+    build_assembly_report,
+    
 rule build_assembly_report:
     input:
         combined_contig_stats="stats/combined_contig_stats.tsv",

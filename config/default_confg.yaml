@@ -1,5 +1,10 @@
 
 
+# megahit OR spades
+assembler: spades
+
+paired_end: true
+
 
 
 ########################
@@ -23,7 +28,7 @@ runtime_assembly: 48
 runtime_long: 24
 runtime_simplejob: 1
 
-java_mem_fraction=0.85
+java_mem_fraction: 0.85
 
 # Local directory for temp files, useful for cluster execution without shared file system
 tmpdir: /tmp
@@ -65,8 +70,7 @@ merging_flags: "ecct iterations=1"
 ########################
 # Assembly
 ########################
-# megahit OR spades
-assembler: spades
+
 
 minimum_contig_length: 1000
 # Megahit

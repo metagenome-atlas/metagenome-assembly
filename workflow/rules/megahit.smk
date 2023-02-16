@@ -4,7 +4,7 @@ assembly_params["megahit"] = {
     "meta-large": " --presets meta-large",
 }
 ASSEMBLY_FRACTIONS = MULTIFILE_FRACTIONS
-if PAIRED_END and config.get("merge_pairs_before_assembly", True):
+if PAIRED_END and config["merge_pairs_before_assembly"]:
     ASSEMBLY_FRACTIONS = ["R1", "R2", "me"]
 
 
@@ -58,12 +58,12 @@ rule run_megahit:
     log:
         "{sample}/logs/assembly/megahit.log",
     params:
-        min_count=config.get("megahit_min_count", MEGAHIT_MIN_COUNT),
-        k_min=config.get("megahit_k_min", MEGAHIT_K_MIN),
-        k_max=config.get("megahit_k_max", MEGAHIT_K_MAX),
-        k_step=config.get("megahit_k_step", MEGAHIT_K_STEP),
-        merge_level=config.get("megahit_merge_level", MEGAHIT_MERGE_LEVEL),
-        prune_level=config.get("megahit_prune_level", MEGAHIT_PRUNE_LEVEL),
+        min_count=config["megahit_min_count"],
+        k_min=config["megahit_k_min"],
+        k_max=config["megahit_k_max"],
+        k_step=config["megahit_k_step"],
+        merge_level=config["megahit_merge_level"],
+        prune_level=config["megahit_prune_level"],
         low_local_ratio=config["megahit_low_local_ratio"],
         min_contig_len=config["minimum_contig_length"],
         outdir=lambda wc, output: os.path.dirname(output[0]),
@@ -76,23 +76,23 @@ rule run_megahit:
         mem=config["assembly_memory"],
         time=config["runtime_assembly"],
     shell:
-        """
-        rm -r {params.outdir} 2> {log}
+        "rm -r {params.outdir} 2> {log} "
+        " ;\n "
+        " megahit "
+        " {params.inputs} "
+        " --tmp-dir {resources.tmpdir} "
+        " --num-cpu-threads {threads} "
+        " --k-min {params.k_min} "
+        " --k-max {params.k_max} "
+        " --k-step {params.k_step} "
+        " --out-dir {params.outdir} "
+        " --out-prefix {wildcards.sample}_prefilter "
+        " --min-contig-len {params.min_contig_len} "
+        " --min-count {params.min_count} "
+        " --merge-level {params.merge_level} "
+        " --prune-level {params.prune_level} "
+        " --low-local-ratio {params.low_local_ratio} "
+        " --memory {resources.mem}000000000  "
+        " {params.preset} &>> {log} "
 
-        megahit \
-        {params.inputs} \
-        --tmp-dir {TMPDIR} \
-        --num-cpu-threads {threads} \
-        --k-min {params.k_min} \
-        --k-max {params.k_max} \
-        --k-step {params.k_step} \
-        --out-dir {params.outdir} \
-        --out-prefix {wildcards.sample}_prefilter \
-        --min-contig-len {params.min_contig_len} \
-        --min-count {params.min_count} \
-        --merge-level {params.merge_level} \
-        --prune-level {params.prune_level} \
-        --low-local-ratio {params.low_local_ratio} \
-        --memory {resources.mem}000000000  \
-        {params.preset} >> {log} 2>&1
-        """
+#TODO: is it necessary to remove the output dir

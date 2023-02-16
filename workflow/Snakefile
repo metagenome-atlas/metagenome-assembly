@@ -1,42 +1,32 @@
-# Main entrypoint of the workflow.
-# Please follow the best practices:
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there.
-
-
 from pathlib import Path
 import pandas as pd
-import sys
+import os,sys
 
 # absolute path to snakemake dir
 snakemake_dir = Path(workflow.snakefile).parent.resolve()
 
-
 # include default config values
 configfile: snakemake_dir.parent /"config/default_confg.yaml"
 
-include: "rules/old.smk"
+# global variables
+PAIRED_END = config["paired_end"]
+
+logger.debug(f"Reads should be paired: {PAIRED_END}")
+
+MULTIFILE_FRACTIONS= ["R1", "R2", "se"] if PAIRED_END else ["se"]
+
 include: "rules/functions.smk"
-include: "rules/pre_assembly.smk"
 
+## Input
 
-if config.get("assembler", "megahit") == "megahit":
+def get_quality_controlled_reads(wildcards):
 
-    include: "rules/megahit.smk"
+    return expand(
+        "{sample}/sequence_quality_control/{sample}_QC_{fraction}.fastq.gz",
+        fraction=MULTIFILE_FRACTIONS,
+        sample=wildcards.sample,
+    )
 
-    raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
-
-else:
-
-    include: "rules/spades.smk"
-
-    if config["spades_use_scaffolds"]:
-        raw_assembly = "{sample}/assembly/scaffolds.fasta"
-    else:
-        raw_assembly = "{sample}/assembly/contigs.fasta"
-
-
-include: "rules/post_assembly.smk"
 
 
 ### Target rules
@@ -59,6 +49,29 @@ rule assembly_one_sample:
     output:
         touch("{sample}/finished_assembly"),
 
+
+
+# decide wich assembler to use
+
+if config["assembler"] == "megahit":
+
+    raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
+
+elif config["assembler"] == "spades":
+
+    if config["spades_use_scaffolds"]:
+        raw_assembly = "{sample}/assembly/scaffolds.fasta"
+    else:
+        raw_assembly = "{sample}/assembly/contigs.fasta"
+
+else:
+    raise ValueError("Invalid assembler specified in config file")
+
+### Rules
+include: "rules/pre_assembly.smk"
+include: "rules/spades.smk"
+include: "rules/megahit.smk"
+include: "rules/post_assembly.smk"
 
 
 
