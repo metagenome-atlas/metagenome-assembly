@@ -287,17 +287,8 @@ if config.get("assembler", "megahit") == "megahit":
             {params.preset} >> {log} 2>&1
             """
 
-    localrules:
-        rename_megahit_output,
-
-    rule rename_megahit_output:
-        input:
-            "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa",
-        output:
-            temp("{sample}/assembly/{sample}_raw_contigs.fasta"),
-        shell:
-            "cp {input} {output}"
-
+    raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
+   
 
 else:
 
@@ -407,25 +398,19 @@ else:
             " {params.p[skip_error_correction]} "
             " >> {log} 2>&1 "
 
-    localrules:
-        rename_spades_output,
 
-    rule rename_spades_output:
-        input:
-            "{{sample}}/assembly/{sequences}.fasta".format(
-            sequences="scaffolds" if config["spades_use_scaffolds"] else "contigs"
-            ),
-        output:
-            temp("{sample}/assembly/{sample}_raw_contigs.fasta"),
-        shell:
-            "cp {input} {output}"
+    if config["spades_use_scaffolds"]:
+        raw_assembly = "{sample}/assembly/scaffolds.fasta"
+    else:
+        raw_assembly = "{sample}/assembly/contigs.fasta"
+
+
+
+
 # standardizes header labels within contig FASTAs
-
-
-
 rule rename_contigs:
     input:
-        "{sample}/assembly/{sample}_raw_contigs.fasta",
+        raw_assembly
     output:
         "{sample}/assembly/{sample}_prefilter_contigs.fasta",
     conda:
