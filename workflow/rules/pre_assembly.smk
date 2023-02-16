@@ -24,21 +24,21 @@ rule init_pre_assembly_processing:
         mem=config["simplejob_mem"],
         java_mem=int(config["simplejob_mem"] * JAVA_MEM_FRACTION),
     shell:
-        """
-        reformat.sh {params.inputs} \
-            interleaved={params.interleaved} \
-            {params.outputs} \
-            iupacToN=t \
-            touppercase=t \
-            qout=33 \
-            overwrite=true \
-            verifypaired={params.verifypaired} \
-            addslash=t \
-            trimreaddescription=t \
-            threads={threads} \
-            pigz=t unpigz=t \
-            -Xmx{resources.java_mem}G 2> {log}
-        """
+        " reformat.sh "
+        " {params.inputs} "
+        " interleaved={params.interleaved} "
+        " {params.outputs} "
+        " iupacToN=t "
+        " touppercase=t "
+        " qout=33 "
+        " overwrite=true "
+        " verifypaired={params.verifypaired} "
+        " addslash=t "
+        " trimreaddescription=t "
+        " threads={threads} "
+        " pigz=t unpigz=t "
+        " -Xmx{resources.java_mem}G "
+        " 2> {log} "
 
 
 rule error_correction:
