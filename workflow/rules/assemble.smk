@@ -48,7 +48,7 @@ if SKIP_QC & (len(MULTIFILE_FRACTIONS) < 3):
         log:
             "{sample}/logs/assembly/init.log",
         conda:
-            "%s/required_packages.yaml" % CONDAENV
+            "../envs/bbmap.yaml"
         threads: config.get("simplejob_threads", 1)
         resources:
             mem=config["simplejob_mem"],
@@ -113,7 +113,7 @@ rule error_correction:
     log:
         "{sample}/logs/assembly/pre_process/error_correction_{previous_steps}.log",
     conda:
-        "%s/required_packages.yaml" % CONDAENV
+        "../envs/bbmap.yaml"
     resources:
         mem=config["mem"],
         java_mem=int(config["mem"] * JAVA_MEM_FRACTION),
@@ -165,7 +165,7 @@ rule merge_pairs:
         mem=config["mem"],
         java_mem=int(config["mem"] * JAVA_MEM_FRACTION),
     conda:
-        "%s/required_packages.yaml" % CONDAENV
+        "../envs/bbmap.yaml"
     log:
         "{sample}/logs/assembly/pre_process/merge_pairs_{previous_steps}.log",
     benchmark:
@@ -414,7 +414,7 @@ rule rename_contigs:
     output:
         "{sample}/assembly/{sample}_prefilter_contigs.fasta",
     conda:
-        "%s/required_packages.yaml" % CONDAENV
+        "../envs/bbmap.yaml"
     threads: config.get("simplejob_threads", 1)
     resources:
         mem=config["simplejob_mem"],
@@ -436,7 +436,7 @@ rule calculate_contigs_stats:
     output:
         "{sample}/assembly/contig_stats/{assembly_step}_contig_stats.txt",
     conda:
-        "../envs/required_packages.yaml"
+        "../envs/bbmap.yaml"
     log:
         "{sample}/logs/assembly/post_process/contig_stats_{assembly_step}.log",
     threads: 1
@@ -499,7 +499,7 @@ if config["filter_contigs"]:
         log:
             "{sample}/logs/assembly/post_process/pilup_prefilter_contigs.log",
         conda:
-            "../envs/required_packages.yaml"
+            "../envs/bbmap.yaml"
         threads: config["threads"]
         resources:
             mem_mb=config["mem"] * 1000,
@@ -529,7 +529,7 @@ if config["filter_contigs"]:
         log:
             "{sample}/logs/assembly/post_process/filter_by_coverage.log",
         conda:
-            "%s/required_packages.yaml" % CONDAENV
+            "../envs/bbmap.yaml"
         threads: 1
         resources:
             mem=config["simplejob_mem"],
@@ -619,7 +619,7 @@ rule pileup_contigs_sample:
     log:
         "{sample}/logs/assembly/calculate_coverage/pilup_final_contigs.log",  # This log file is uesd for report
     conda:
-        "%s/required_packages.yaml" % CONDAENV
+        "../envs/bbmap.yaml"
     threads: config.get("threads", 1)
     resources:
         mem=config["mem"],
@@ -645,7 +645,7 @@ rule create_bam_index:
     output:
         "{file}.bam.bai",
     conda:
-        "../envs/required_packages.yaml"
+        "../envs/bbmap.yaml"
     threads: 1
     resources:
         mem=2 * config["simplejob_threads"],
@@ -661,7 +661,7 @@ rule predict_genes:
         faa="{sample}/annotation/predicted_genes/{sample}.faa",
         gff="{sample}/annotation/predicted_genes/{sample}.gff",
     conda:
-        "%s/prodigal.yaml" % CONDAENV
+        "../envs/prodigal.yaml"
     log:
         "{sample}/logs/gene_annotation/prodigal.txt",
     benchmark:
@@ -761,7 +761,7 @@ rule build_assembly_report:
     output:
         report="reports/assembly_report.html",
     conda:
-        "%s/report.yaml" % CONDAENV
+        "../envs/report.yaml"
     log:
         "logs/assembly/report.log",
     script:
