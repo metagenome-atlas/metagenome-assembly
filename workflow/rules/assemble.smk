@@ -754,7 +754,7 @@ rule combine_contig_stats:
     script:
         "../scripts/combine_contig_stats.py"
 
-
+"""
 rule build_assembly_report:
     input:
         combined_contig_stats="stats/combined_contig_stats.tsv",
@@ -766,3 +766,4 @@ rule build_assembly_report:
         "logs/assembly/report.log",
     script:
         "../report/assembly_report.py"
+"""
