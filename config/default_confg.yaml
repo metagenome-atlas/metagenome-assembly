@@ -1,5 +1,7 @@
 
 
+
+
 ########################
 # Execution parameters
 ########################
@@ -20,6 +22,8 @@ runtime_default: 5
 runtime_assembly: 48
 runtime_long: 24
 runtime_simplejob: 1
+
+java_mem_fraction=0.85
 
 # Local directory for temp files, useful for cluster execution without shared file system
 tmpdir: /tmp

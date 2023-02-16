@@ -7,6 +7,9 @@ import sys
 #from copy import deepcopy
 
 
+JAVA_MEM_FRACTION = config["java_mem_fraction"]
+
+
 def get_preprocessing_steps(config):
     preprocessing_steps = ["QC"]
     if config.get("normalize_reads_before_assembly", False):
