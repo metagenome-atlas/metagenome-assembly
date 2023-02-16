@@ -43,6 +43,8 @@ data_type: metagenome # metagenome or metatranscriptome
 # Pre-assembly-processing
 ########################
 
+normalize_reads_before_assembly: false
+
 # Advanced Error correction
 error_correction_before_assembly : true
 spades_skip_BayesHammer: true # Skip error correction in spades assembler

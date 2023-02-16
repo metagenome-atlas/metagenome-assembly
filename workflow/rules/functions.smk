@@ -6,13 +6,13 @@ JAVA_MEM_FRACTION = config["java_mem_fraction"]
 
 def get_preprocessing_steps(config):
     preprocessing_steps = ["QC"]
-    if config.get("normalize_reads_before_assembly", False):
+    if config["normalize_reads_before_assembly"]:
         preprocessing_steps.append("normalized")
 
-    if config.get("error_correction_before_assembly", True):
+    if config["error_correction_before_assembly"]:
         preprocessing_steps.append("errorcorr")
 
-    if config.get("merge_pairs_before_assembly", True) and PAIRED_END:
+    if config["merge_pairs_before_assembly"] and PAIRED_END:
         preprocessing_steps.append("merged")
 
     return ".".join(preprocessing_steps)
@@ -20,6 +20,7 @@ def get_preprocessing_steps(config):
 
 assembly_preprocessing_steps = get_preprocessing_steps(config)
 
+logger.debug(f"Assembly preprocessing steps: {assembly_preprocessing_steps}")
 
 assembly_params = {}
 

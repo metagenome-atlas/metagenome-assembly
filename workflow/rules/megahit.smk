@@ -3,9 +3,11 @@ assembly_params["megahit"] = {
     "meta-sensitive": "--presets meta-sensitive",
     "meta-large": " --presets meta-large",
 }
-ASSEMBLY_FRACTIONS = MULTIFILE_FRACTIONS
+
 if PAIRED_END and config["merge_pairs_before_assembly"]:
     ASSEMBLY_FRACTIONS = ["R1", "R2", "me"]
+else:
+    ASSEMBLY_FRACTIONS = MULTIFILE_FRACTIONS
 
 
 localrules:

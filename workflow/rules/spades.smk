@@ -1,3 +1,6 @@
+
+from copy import deepcopy
+
 if PAIRED_END:
     ASSEMBLY_FRACTIONS = ["R1", "R2"]
     if config.get("merge_pairs_before_assembly", True):

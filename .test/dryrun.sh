@@ -61,5 +61,5 @@ set -x
 
 echo "Dryrun with single end reads and megahit"
 
-snakemake -d $test_dir  --dryrun --config assembler="megahit" paired_end=false $@
+snakemake -d $test_dir  --dryrun --config assembler="megahit" paired_end=False $@
 

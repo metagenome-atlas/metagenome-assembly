@@ -1,5 +1,7 @@
 
 
+# TODO: add normalization again
+
 rule init_pre_assembly_processing:
     input:  #expect SE or R1,R2 or R1,R2,SE
         get_quality_controlled_reads,

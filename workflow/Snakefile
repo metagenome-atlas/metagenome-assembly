@@ -9,9 +9,9 @@ snakemake_dir = Path(workflow.snakefile).parent.resolve()
 configfile: snakemake_dir.parent /"config/default_confg.yaml"
 
 # global variables
-PAIRED_END = config["paired_end"]
+PAIRED_END = bool(config["paired_end"])
 
-logger.debug(f"Reads should be paired: {PAIRED_END}")
+logger.debug(f"Reads are: {'paired' if PAIRED_END else 'single-end'}")
 
 MULTIFILE_FRACTIONS= ["R1", "R2", "se"] if PAIRED_END else ["se"]
 
@@ -54,11 +54,13 @@ rule assembly_one_sample:
 # decide wich assembler to use
 
 if config["assembler"] == "megahit":
-
+    
+    include: "rules/megahit.smk"
     raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
 
 elif config["assembler"] == "spades":
-
+    include: "rules/spades.smk"
+    
     if config["spades_use_scaffolds"]:
         raw_assembly = "{sample}/assembly/scaffolds.fasta"
     else:
@@ -69,9 +71,10 @@ else:
 
 ### Rules
 include: "rules/pre_assembly.smk"
-include: "rules/spades.smk"
-include: "rules/megahit.smk"
 include: "rules/post_assembly.smk"
+
+
+logger.debug(f"Assembly fractions are: {ASSEMBLY_FRACTIONS}")
 
 
 
