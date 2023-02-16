@@ -95,59 +95,6 @@ else:
             for i in range(len(input)):
                 os.symlink(os.path.abspath(input[i]), output[i])
 
-
-
-
-#
-rule normalize_reads:
-    input:
-        expand(
-            "{{sample}}/assembly/reads/{{previous_steps}}_{fraction}.fastq.gz",
-            fraction=MULTIFILE_FRACTIONS,
-        ),
-    output:
-        reads=temp(
-            expand(
-                "{{sample}}/assembly/reads/{{previous_steps}}.normalized_{fraction}.fastq.gz",
-                fraction=MULTIFILE_FRACTIONS,
-            )
-        ),
-        histin="{sample}/assembly/normalization/histogram_{previous_steps}_before_normalization.tsv.gz",
-        histout=(
-            "{sample}/assembly/normalization/histogram_{previous_steps}_after.tsv.gz"
-        ),
-    params:
-        k=config.get("normalization_kmer_length", NORMALIZATION_KMER_LENGTH),
-        target=config.get("normalization_target_depth", NORMALIZATION_TARGET_DEPTH),
-        mindepth=config["normalization_minimum_kmer_depth"],
-        inputs=lambda wc, input: io_params_for_tadpole(input),
-        outputs=lambda wc, output: io_params_for_tadpole(output.reads, key="out"),
-        tmpdir="tmpdir=%s" % TMPDIR if TMPDIR else "",
-    log:
-        "{sample}/logs/assembly/pre_process/normalization_{previous_steps}.log",
-    benchmark:
-        "logs/benchmarks/assembly/pre_process/normalization/{sample}_{previous_steps}.txt"
-    conda:
-        "%s/required_packages.yaml" % CONDAENV
-    threads: config.get("threads", 1)
-    resources:
-        mem=config["mem"],
-        java_mem=int(config["mem"] * JAVA_MEM_FRACTION),
-    shell:
-        " bbnorm.sh {params.inputs} "
-        " {params.outputs} "
-        " {params.tmpdir} "
-        " tossbadreads=t "
-        " hist={output.histin} "
-        " histout={output.histout} "
-        " mindepth={params.mindepth} "
-        " k={params.k} "
-        " target={params.target} "
-        " prefilter=t "
-        " threads={threads} "
-        " -Xmx{resources.java_mem}G &> {log} "
-
-
 rule error_correction:
     input:
         expand(
