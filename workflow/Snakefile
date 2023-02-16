@@ -1,8 +1,7 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
+# Main entrypoint of the workflow.
+# Please follow the best practices:
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
-
+# in particular regarding the standardized folder structure mentioned there.
 
 
 from pathlib import Path
@@ -19,20 +18,20 @@ import utils
 configfile: f"{snakemake_dir.parent}/config/default_config.yaml"
 
 
-
-
 include: "rules/functions.smk"
+include: "rules/old.smk"
 include: "rules/pre_assembly.smk"
 
-if config.get("assembler", "megahit") == "megahit":
-   
-   include: "rules/megahit.smk"
 
-   raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
+if config.get("assembler", "megahit") == "megahit":
+
+    include: "rules/megahit.smk"
+
+    raw_assembly = "{sample}/assembly/megahit/{sample}_prefilter.contigs.fa"
 
 else:
-    include: "rules/spades.smk"
 
+    include: "rules/spades.smk"
 
     if config["spades_use_scaffolds"]:
         raw_assembly = "{sample}/assembly/scaffolds.fasta"
@@ -41,3 +40,21 @@ else:
 
 
 include: "rules/post_assembly.smk"
+
+
+rule assembly_one_sample:
+    input:
+        "{sample}/{sample}_contigs.fasta",
+        "{sample}/sequence_alignment/{sample}.bam",
+        "{sample}/assembly/contig_stats/postfilter_coverage_stats.txt",
+        "{sample}/assembly/contig_stats/prefilter_contig_stats.txt",
+        "{sample}/assembly/contig_stats/final_contig_stats.txt",
+    output:
+        touch("{sample}/finished_assembly"),
+
+
+rule all:
+    input:
+        expand("{sample}/finished_assembly", sample=SAMPLES),
+    output:
+        temp(touch("finished_assembly")),

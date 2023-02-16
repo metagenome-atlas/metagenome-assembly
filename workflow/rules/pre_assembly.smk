@@ -1,75 +1,49 @@
 
-# I have problems with se reads
-if SKIP_QC & (len(MULTIFILE_FRACTIONS) < 3):
 
-    rule init_pre_assembly_processing:
-        input:  #expect SE or R1,R2 or R1,R2,SE
-            get_quality_controlled_reads,
-        output:
-            temp(
-                expand(
-                    "{{sample}}/assembly/reads/QC_{fraction}.fastq.gz",
-                    fraction=MULTIFILE_FRACTIONS,
-                )
-            ),
-        params:
-            inputs=lambda wc, input: io_params_for_tadpole(input, "in"),
-            interleaved=(
-                lambda wc: "t"
-                if (config.get("interleaved_fastqs", False) & SKIP_QC)
-                else "f"
-            ),
-            outputs=lambda wc, output: io_params_for_tadpole(output, "out"),
-            verifypaired="t" if PAIRED_END else "f",
-        log:
-            "{sample}/logs/assembly/init.log",
-        conda:
-            "../envs/bbmap.yaml"
-        threads: config.get("simplejob_threads", 1)
-        resources:
-            mem=config["simplejob_mem"],
-            java_mem=int(config["simplejob_mem"] * JAVA_MEM_FRACTION),
-        shell:
-            """
-            reformat.sh {params.inputs} \
-                interleaved={params.interleaved} \
-                {params.outputs} \
-                iupacToN=t \
-                touppercase=t \
-                qout=33 \
-                overwrite=true \
-                verifypaired={params.verifypaired} \
-                addslash=t \
-                trimreaddescription=t \
-                threads={threads} \
-                pigz=t unpigz=t \
-                -Xmx{resources.java_mem}G 2> {log}
-            """
+rule init_pre_assembly_processing:
+    input:  #expect SE or R1,R2 or R1,R2,SE
+        get_quality_controlled_reads,
+    output:
+        temp(
+            expand(
+                "{{sample}}/assembly/reads/QC_{fraction}.fastq.gz",
+                fraction=MULTIFILE_FRACTIONS,
+            )
+        ),
+    params:
+        inputs=lambda wc, input: io_params_for_tadpole(input, "in"),
+        interleaved=(
+            lambda wc: "t"
+            if (config.get("interleaved_fastqs", False) & SKIP_QC)
+            else "f"
+        ),
+        outputs=lambda wc, output: io_params_for_tadpole(output, "out"),
+        verifypaired="t" if PAIRED_END else "f",
+    log:
+        "{sample}/logs/assembly/init.log",
+    conda:
+        "../envs/bbmap.yaml"
+    threads: config.get("simplejob_threads", 1)
+    resources:
+        mem=config["simplejob_mem"],
+        java_mem=int(config["simplejob_mem"] * JAVA_MEM_FRACTION),
+    shell:
+        """
+        reformat.sh {params.inputs} \
+            interleaved={params.interleaved} \
+            {params.outputs} \
+            iupacToN=t \
+            touppercase=t \
+            qout=33 \
+            overwrite=true \
+            verifypaired={params.verifypaired} \
+            addslash=t \
+            trimreaddescription=t \
+            threads={threads} \
+            pigz=t unpigz=t \
+            -Xmx{resources.java_mem}G 2> {log}
+        """
 
-
-else:
-
-    localrules:
-        init_pre_assembly_processing,
-
-    rule init_pre_assembly_processing:
-        input:
-            lambda wildcards: get_quality_controlled_reads(wildcards, include_se=True),
-        output:
-            temp(
-                expand(
-                    "{{sample}}/assembly/reads/QC_{fraction}.fastq.gz",
-                    fraction=MULTIFILE_FRACTIONS,
-                )
-            ),
-        threads: 1
-        run:
-            # make symlink
-            assert len(input) == len(
-                output
-            ), "Input and ouput files have not same number, can not create symlinks for all."
-            for i in range(len(input)):
-                os.symlink(os.path.abspath(input[i]), output[i])
 
 rule error_correction:
     input:

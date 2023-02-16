@@ -1,8 +1,7 @@
-
 # standardizes header labels within contig FASTAs
 rule rename_contigs:
     input:
-        raw_assembly
+        raw_assembly,
     output:
         "{sample}/assembly/{sample}_prefilter_contigs.fasta",
     conda:
@@ -137,8 +136,9 @@ if config["filter_contigs"]:
             minl={params.minl} \
             trim={params.trim} \
             -Xmx{resources.java_mem}G 2> {log}"""
-# HACK: this makes two copies of the same file
 
+
+# HACK: this makes two copies of the same file
 
 
 else:  # no filter
@@ -312,7 +312,7 @@ rule get_contigs_from_gene_names:
                             )
                         )
                         gene_idx += 1
-        #
+                        #
 
 
 
@@ -343,6 +343,7 @@ rule combine_contig_stats:
         "logs/assembly/combine_contig_stats.log",
     script:
         "../scripts/combine_contig_stats.py"
+
 
 """
 rule build_assembly_report:
