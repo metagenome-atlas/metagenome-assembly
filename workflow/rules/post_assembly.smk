@@ -9,7 +9,7 @@ rule rename_contigs:
     threads: config.get("simplejob_threads", 1)
     resources:
         mem=config["simplejob_mem"],
-        time=config["runtime"]["simplejob"],
+        time=config["runtime_simplejob"],
     log:
         "{sample}/logs/assembly/post_process/rename_and_filter_size.log",
     params:
@@ -33,7 +33,7 @@ rule calculate_contigs_stats:
     threads: 1
     resources:
         mem=1,
-        time=config["runtime"]["simplejob"],
+        time=config["runtime_simplejob"],
     shell:
         "stats.sh in={input} format=3 out={output} &> {log}"
 
@@ -126,16 +126,18 @@ if config["filter_contigs"]:
             mem=config["simplejob_mem"],
             java_mem=int(config["simplejob_mem"] * JAVA_MEM_FRACTION),
         shell:
-            """filterbycoverage.sh in={input.fasta} \
-            cov={input.covstats} \
-            out={output.fasta} \
-            outd={output.removed_names} \
-            minc={params.minc} \
-            minp={params.minp} \
-            minr={params.minr} \
-            minl={params.minl} \
-            trim={params.trim} \
-            -Xmx{resources.java_mem}G 2> {log}"""
+            "filterbycoverage.sh "
+            " in={input.fasta} "
+            " cov={input.covstats} "
+            " out={output.fasta} "
+            " outd={output.removed_names} "
+            " minc={params.minc} "
+            " minp={params.minp} "
+            " minr={params.minr} "
+            " minl={params.minl} "
+            " trim={params.trim} "
+            " -Xmx{resources.java_mem}G "
+            " 2> {log}"
 
 
 # HACK: this makes two copies of the same file
@@ -259,7 +261,7 @@ rule predict_genes:
     threads: 1
     resources:
         mem=config["simplejob_mem"],
-        time=config["runtime"]["simplejob"],
+        time=config["runtime_simplejob"],
     shell:
         """
         prodigal -i {input} -o {output.gff} -d {output.fna} \

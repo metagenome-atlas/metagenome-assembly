@@ -74,7 +74,7 @@ rule run_megahit:
     threads: config["assembly_threads"]
     resources:
         mem=config["assembly_memory"],
-        time=config["runtime"]["assembly"],
+        time=config["runtime_assembly"],
     shell:
         """
         rm -r {params.outdir} 2> {log}

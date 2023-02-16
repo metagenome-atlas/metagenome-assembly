@@ -84,7 +84,7 @@ rule run_spades:
     threads: config["assembly_threads"]
     resources:
         mem=config["assembly_memory"],
-        time=config["runtime"]["assembly"],
+        time=config["runtime_assembly"],
     shell:
         # remove pipeline_state file to create all output files again
         " rm -f {params.p[outdir]}/pipeline_state/stage_*_copy_files 2> {log} ; "

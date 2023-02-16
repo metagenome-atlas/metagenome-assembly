@@ -15,17 +15,15 @@ assembly_memory: 250
 simplejob_mem: 10
 simplejob_threads: 4
 
-#Runtime only for cluster execution
-runtime: #in h
-    default: 5
-    assembly: 48
-    long: 24
-    simplejob: 1
+#Runtime only for cluster execution in h
+runtime_default: 5
+runtime_assembly: 48
+runtime_long: 24
+runtime_simplejob: 1
 
 # Local directory for temp files, useful for cluster execution without shared file system
 tmpdir: /tmp
-# directory where databases are downloaded with 'atlas download'
-database_dir: databases
+
 
 
 data_type: metagenome # metagenome or metatranscriptome
