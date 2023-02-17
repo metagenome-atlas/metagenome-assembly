@@ -1,11 +1,7 @@
-
-
 if not config["filter_contigs"]:
+    filtered_assembly = raw_assembly
 
-    filtered_assembly= raw_assembly
-
-else:  
-
+else:
 
     ruleorder: align_reads_to_prefilter_contigs > align_reads_to_final_contigs
 
@@ -85,11 +81,7 @@ else:
             " -Xmx{resources.java_mem}G "
             " 2> {log}"
 
-
-
-    filtered_assembly= rules.filter_by_coverage.output.fasta
-
-
+    filtered_assembly = rules.filter_by_coverage.output.fasta
 
 
 # standardizes header labels within contig FASTAs
@@ -118,15 +110,15 @@ rule rename_contigs:
 #### contig stats
 
 
-
 rule calculate_contigs_stats:
     input:
-        lambda wc: if wc.assembly_step=="final":
-                get_assembly(wc)
-            else:
-                raw_assembly.format(**wc),
+        lambda wc: get_assembly(wc)
+        if (wc.assembly_step == "final")
+        else raw_assembly.format(**wc),
     output:
-        temp("Intermediate/Assembly/contig_stats/{sample}_{assembly_step}_contig_stats.txt"),
+        temp(
+            "Intermediate/Assembly/contig_stats/{sample}_{assembly_step}_contig_stats.txt"
+        ),
     conda:
         "../envs/bbmap.yaml"
     log:
@@ -155,21 +147,18 @@ rule combine_sample_contig_stats:
         c = pd.DataFrame()
         for f in input:
             df = pd.read_csv(f, sep="\t")
-            assembly_step = os.path.basename(f).replace("_contig_stats.txt", "").replace(wildcards.sample+"_","")
+            assembly_step = (
+                os.path.basename(f)
+                .replace("_contig_stats.txt", "")
+                .replace(wildcards.sample + "_", "")
+            )
             c.loc[assembly_step]
 
         c.to_csv(output[0], sep="\t")
 
 
-
-
-
-
-
-
-
 ### Coverage
-        
+
 
 rule align_reads_to_final_contigs:
     input:
@@ -200,11 +189,7 @@ rule pileup_contigs_sample:
         covstats="Intermediate/Assembly/contig_stats/{sample}_coverage_stats.txt",
         bincov="Intermediate/Assembly/contig_stats/{sample}_coverage_binned.txt",
     params:
-        pileup_secondary=(
-            "t"
-            if config["count_multi_mapped_reads"]
-            else "f"
-        ),
+        pileup_secondary=("t" if config["count_multi_mapped_reads"] else "f"),
     benchmark:
         "logs/benchmarks/assembly/calculate_coverage/pileup/{sample}.txt"
     log:
@@ -243,8 +228,6 @@ rule create_bam_index:
         "samtools index {input}"
 
 
-
-
 localrules:
     combine_contig_stats,
 
@@ -252,10 +235,12 @@ localrules:
 rule combine_contig_stats:
     input:
         contig_stats=expand(
-            "Intermediate/Assembly/contig_stats/{sample}/final_contig_stats.txt", sample=get_all_samples()
+            "Intermediate/Assembly/contig_stats/{sample}/final_contig_stats.txt",
+            sample=get_all_samples(),
         ),
         gene_tables=expand(
-            "Intermediate/Assembly/annotations/genes/{sample}.tsv", sample=get_all_samples()
+            "Intermediate/Assembly/annotations/genes/{sample}.tsv",
+            sample=get_all_samples(),
         ),
         mapping_logs=expand(
             "{sample}/logs/assembly/calculate_coverage/pilup_final_contigs.log",

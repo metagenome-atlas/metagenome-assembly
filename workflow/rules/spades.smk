@@ -1,4 +1,3 @@
-
 from copy import deepcopy
 
 if PAIRED_END:
@@ -18,7 +17,9 @@ assembly_params["spades"] = {"meta": "--meta", "normal": "", "rna": "--rna"}
 
 
 def spades_parameters(wc, input):
-    if not os.path.exists("Intermediate/Assembly/{sample}/params.txt".format(sample=wc.sample)):
+    if not os.path.exists(
+        "Intermediate/Assembly/{sample}/params.txt".format(sample=wc.sample)
+    ):
         params = {}
 
         reads = dict(zip(ASSEMBLY_FRACTIONS, input))
@@ -79,7 +80,7 @@ rule run_spades:
         "logs/benchmarks/assembly/spades/{sample}.txt"
     params:
         p=lambda wc, input: spades_parameters(wc, input),
-        k=config["spades_k"]
+        k=config["spades_k"],
     log:
         "{sample}/logs/assembly/spades.log",
     conda:

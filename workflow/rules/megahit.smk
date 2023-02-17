@@ -97,4 +97,5 @@ rule run_megahit:
         " --memory {resources.mem}000000000  "
         " {params.preset} &>> {log} "
 
-#TODO: is it necessary to remove the output dir
+
+# TODO: is it necessary to remove the output dir

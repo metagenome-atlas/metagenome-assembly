@@ -1,6 +1,5 @@
-
-
 # TODO: add normalization again
+
 
 rule init_pre_assembly_processing:
     input:  #expect SE or R1,R2 or R1,R2,SE
@@ -97,9 +96,21 @@ rule error_correction:
 
 rule merge_pairs:
     input:
-        unpack(lambda wc: {fraction: "Intermediate/Assembly/{sample}/reads/{previous_steps}_{fraction}.fastq.gz".format(fraction=fraction,**wc) for fraction in ["R1", "R2"]}),
+        unpack(
+            lambda wc: {
+                fraction: "Intermediate/Assembly/{sample}/reads/{previous_steps}_{fraction}.fastq.gz".format(
+                    fraction=fraction, **wc
+                )
+                for fraction in ["R1", "R2"]
+            }
+        ),
     output:
-        temp(expand("Intermediate/Assembly/{{sample}}/reads/{{previous_steps}}.merged_{fraction}.fastq.gz",fraction = ["R1", "R2","me"])),
+        temp(
+            expand(
+                "Intermediate/Assembly/{{sample}}/reads/{{previous_steps}}.merged_{fraction}.fastq.gz",
+                fraction=["R1", "R2", "me"],
+            )
+        ),
     threads: config.get("threads", 1)
     resources:
         mem=config["mem"],
@@ -125,4 +136,3 @@ rule merge_pairs:
         " {params.flags} k={params.kmer} "
         " pigz=t unpigz=t "
         " extend2={params.extend2} 2> {log} "
-

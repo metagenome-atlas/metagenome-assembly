@@ -1,6 +1,3 @@
-
-
-
 JAVA_MEM_FRACTION = config["java_mem_fraction"]
 
 
@@ -67,6 +64,5 @@ def io_params_for_tadpole(io, key="in"):
 
 
 def get_all_samples():
-
-    samples= glob_wildcards("{sample}/sequence_quality_control").sample
+    samples = glob_wildcards("{sample}/sequence_quality_control").sample
     return samples
