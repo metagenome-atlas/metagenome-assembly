@@ -60,11 +60,8 @@ if config["assembler"] == "megahit":
 
 elif config["assembler"] == "spades":
     include: "rules/spades.smk"
-    
-    if config["spades_use_scaffolds"]:
-        raw_assembly = "Intermediate/Assembly/spades/{sample}/scaffolds.fasta"
-    else:
-        raw_assembly = "Intermediate/Assembly/spades/{sample}/contigs.fasta"
+    raw_assembly = "Intermediate/Assembly/spades/{sample}/scaffolds.fasta"
+
 
 else:
     raise ValueError("Invalid assembler specified in config file")
