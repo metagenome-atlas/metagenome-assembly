@@ -28,8 +28,12 @@ def get_quality_controlled_reads(wildcards):
     )
 
 
+def get_assembly(wildcards):
+    return "Assembly/assemblies/{sample}.fasta".format(**wildcards)
+
 
 ### Target rules
+
 
 
 rule all:
@@ -41,11 +45,11 @@ rule all:
 
 rule assembly_one_sample:
     input:
-        "{sample}/{sample}_contigs.fasta",
-        "{sample}/sequence_alignment/{sample}.bam",
-        "Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_stats.txt",
-        "Intermediate/Assembly/{sample}/contig_stats/prefilter_contig_stats.txt",
-        "Intermediate/Assembly/{sample}/contig_stats/final_contig_stats.txt",
+        get_assembly,
+        "Assembly/alignments/{sample}.bam",
+        "Intermediate/Assembly/contig_stats/{sample}_coverage_stats.txt",
+        "Intermediate/Assembly/contig_stats/{sample}/prefilter_contig_stats.txt",
+        "Intermediate/Assembly/contig_stats/{sample}/final_contig_stats.txt",
     output:
         touch("{sample}/finished_assembly"),
 
@@ -56,22 +60,24 @@ rule assembly_one_sample:
 if config["assembler"] == "megahit":
     
     include: "rules/megahit.smk"
-    raw_assembly = "Intermediate/Assembly/{sample}/megahit/{sample}_prefilter.contigs.fa"
+    raw_assembly = "Intermediate/Assembly/megahit/{sample}/{sample}_prefilter.contigs.fa"
 
 elif config["assembler"] == "spades":
     include: "rules/spades.smk"
     
     if config["spades_use_scaffolds"]:
-        raw_assembly = "Intermediate/Assembly/{sample}/spades/scaffolds.fasta"
+        raw_assembly = "Intermediate/Assembly/spades/{sample}/scaffolds.fasta"
     else:
-        raw_assembly = "Intermediate/Assembly/{sample}/spades/contigs.fasta"
+        raw_assembly = "Intermediate/Assembly/spades/{sample}/contigs.fasta"
 
 else:
     raise ValueError("Invalid assembler specified in config file")
 
 ### Rules
 include: "rules/pre_assembly.smk"
+include: "rules/annotations.smk"
 include: "rules/post_assembly.smk"
+
 
 
 logger.debug(f"Assembly fractions are: {ASSEMBLY_FRACTIONS}")

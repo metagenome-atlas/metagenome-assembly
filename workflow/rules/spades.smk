@@ -60,7 +60,7 @@ def spades_parameters(wc, input):
             "longreads": "",
         }
 
-    params["outdir"] = "Intermediate/Assembly/{sample}/spades".format(sample=wc.sample)
+    params["outdir"] = "Intermediate/Assembly/spades/{sample}".format(sample=wc.sample)
 
     return params
 
@@ -73,8 +73,8 @@ rule run_spades:
             assembly_preprocessing_steps=assembly_preprocessing_steps,
         ),
     output:
-        "Intermediate/Assembly/{sample}/spades/contigs.fasta",
-        "Intermediate/Assembly/{sample}/spades/scaffolds.fasta",
+        "Intermediate/Assembly/spades/{sample}/contigs.fasta",
+        "Intermediate/Assembly/spades/{sample}/scaffolds.fasta",
     benchmark:
         "logs/benchmarks/assembly/spades/{sample}.txt"
     params:

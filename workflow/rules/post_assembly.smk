@@ -1,72 +1,18 @@
-# standardizes header labels within contig FASTAs
-rule rename_contigs:
-    input:
-        raw_assembly,
-    output:
-        "Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
-    conda:
-        "../envs/bbmap.yaml"
-    threads: config.get("simplejob_threads", 1)
-    resources:
-        mem=config["simplejob_mem"],
-        time=config["runtime_simplejob"],
-    log:
-        "{sample}/logs/assembly/post_process/rename_and_filter_size.log",
-    params:
-        minlength=config["minimum_contig_length"],
-    shell:
-        "rename.sh "
-        " in={input} out={output} ow=t "
-        " prefix={wildcards.sample} "
-        " minscaf={params.minlength} &> {log} "
 
 
-rule calculate_contigs_stats:
-    input:
-        "Intermediate/Assembly/{sample}/{sample}_{assembly_step}_contigs.fasta",
-    output:
-        "Intermediate/Assembly/{sample}/contig_stats/{assembly_step}_contig_stats.txt",
-    conda:
-        "../envs/bbmap.yaml"
-    log:
-        "{sample}/logs/assembly/post_process/contig_stats_{assembly_step}.log",
-    threads: 1
-    resources:
-        mem=1,
-        time=config["runtime_simplejob"],
-    shell:
-        "stats.sh in={input} format=3 out={output} &> {log}"
+if not config["filter_contigs"]:
 
+    filtered_assembly= raw_assembly
 
-rule combine_sample_contig_stats:
-    input:
-        expand(
-            "Intermediate/Assembly/{{sample}}/contig_stats/{assembly_step}_contig_stats.txt",
-            assembly_step=["prefilter", "final"],
-        ),
-    output:
-        "Intermediate/Assembly/{sample}/contig_stats.tsv",
-    run:
-        import os
-        import pandas as pd
+else:  
 
-        c = pd.DataFrame()
-        for f in input:
-            df = pd.read_csv(f, sep="\t")
-            assembly_step = os.path.basename(f).replace("_contig_stats.txt", "")
-            c.loc[assembly_step]
-
-        c.to_csv(output[0], sep="\t")
-
-
-if config["filter_contigs"]:
 
     ruleorder: align_reads_to_prefilter_contigs > align_reads_to_final_contigs
 
     rule align_reads_to_prefilter_contigs:
         input:
             query=get_quality_controlled_reads,
-            target=rules.rename_contigs.output,
+            target=raw_assembly,
         output:
             bam=temp("{sample}/sequence_alignment/alignment_to_prefilter_contigs.bam"),
         params:
@@ -84,7 +30,7 @@ if config["filter_contigs"]:
             fasta="Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
             bam="{sample}/sequence_alignment/alignment_to_prefilter_contigs.bam",
         output:
-            covstats="Intermediate/Assembly/{sample}/contig_stats/prefilter_coverage_stats.txt",
+            covstats="Intermediate/Assembly/contig_stats/{sample}/prefilter_coverage_stats.txt",
         params:
             pileup_secondary="t",
         log:
@@ -107,7 +53,7 @@ if config["filter_contigs"]:
     rule filter_by_coverage:
         input:
             fasta="Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
-            covstats="Intermediate/Assembly/{sample}/contig_stats/prefilter_coverage_stats.txt",
+            covstats="Intermediate/Assembly/contig_stats/{sample}/prefilter_coverage_stats.txt",
         output:
             fasta="Intermediate/Assembly/{sample}/{sample}_final_contigs.fasta",
             removed_names="Intermediate/Assembly/{sample}/{sample}_discarded_contigs.fasta",
@@ -140,52 +86,104 @@ if config["filter_contigs"]:
             " 2> {log}"
 
 
-# HACK: this makes two copies of the same file
+
+    filtered_assembly= rules.filter_by_coverage.output.fasta
 
 
-else:  # no filter
-
-    localrules:
-        do_not_filter_contigs,
-
-    rule do_not_filter_contigs:
-        input:
-            rules.rename_contigs.output,
-        output:
-            "Intermediate/Assembly/{sample}/{sample}_final_contigs.fasta",
-        threads: 1
-        shell:
-            "cp {input} {output}"
 
 
-localrules:
-    finalize_contigs,
-
-
-rule finalize_contigs:
+# standardizes header labels within contig FASTAs
+rule rename_contigs:
     input:
-        "Intermediate/Assembly/{sample}/{sample}_final_contigs.fasta",
+        filtered_assembly,
     output:
-        "{sample}/{sample}_contigs.fasta",
+        get_assembly,
+    conda:
+        "../envs/bbmap.yaml"
+    threads: config["simplejob_threads"]
+    resources:
+        mem=config["simplejob_mem"],
+        time=config["runtime_simplejob"],
+    log:
+        "logs/assembly/post_process/rename_and_filter_size_{sample}/.log",
+    params:
+        minlength=config["minimum_contig_length"],
+    shell:
+        "rename.sh "
+        " in={input} out={output} ow=t "
+        " prefix={wildcards.sample} "
+        " minscaf={params.minlength} &> {log} "
+
+
+#### contig stats
+
+
+
+rule calculate_contigs_stats:
+    input:
+        lambda wc: if wc.assembly_step=="final":
+                get_assembly(wc)
+            else:
+                raw_assembly.format(**wc),
+    output:
+        temp("Intermediate/Assembly/contig_stats/{sample}_{assembly_step}_contig_stats.txt"),
+    conda:
+        "../envs/bbmap.yaml"
+    log:
+        "{sample}/logs/assembly/post_process/contig_stats_{assembly_step}.log",
     threads: 1
+    resources:
+        mem=1,
+        time=config["runtime_simplejob"],
+    shell:
+        "stats.sh in={input} format=3 out={output} &> {log}"
+
+
+# I dont now if this rule is really necessary
+rule combine_sample_contig_stats:
+    input:
+        expand(
+            "Intermediate/Assembly/contig_stats/{{sample}}_{assembly_step}_contig_stats.txt",
+            assembly_step=["prefilter", "final"],
+        ),
+    output:
+        "Intermediate/Assembly/contig_stats/{sample}.tsv",
     run:
-        os.symlink(os.path.relpath(input[0], os.path.dirname(output[0])), output[0])
+        import os
+        import pandas as pd
+
+        c = pd.DataFrame()
+        for f in input:
+            df = pd.read_csv(f, sep="\t")
+            assembly_step = os.path.basename(f).replace("_contig_stats.txt", "").replace(wildcards.sample+"_","")
+            c.loc[assembly_step]
+
+        c.to_csv(output[0], sep="\t")
 
 
-# generalized rule so that reads from any "sample" can be aligned to contigs from "sample_contigs"
+
+
+
+
+
+
+
+### Coverage
+        
+
 rule align_reads_to_final_contigs:
     input:
         query=get_quality_controlled_reads,
-        target="{sample_contigs}/{sample_contigs}_contigs.fasta",
+        target=get_assembly,
     output:
-        bam="{sample_contigs}/sequence_alignment/{sample}.bam",
+        bam="Assembly/alignments/{sample}.bam",
     params:
         extra="-x sr",
         sorting="coordinate",
     benchmark:
-        "logs/benchmarks/assembly/calculate_coverage/align_reads_to_filtered_contigs/{sample}_to_{sample_contigs}.txt"
+        "logs/benchmarks/assembly/align_reads/{sample}.txt"
     log:
-        "{sample_contigs}/logs/assembly/calculate_coverage/align_reads_from_{sample}_to_filtered_contigs.log",
+        "logs/assembly/align_reads/{sample}.",
     threads: config["threads"]
     resources:
         mem_mb=config["mem"] * 1000,
@@ -195,12 +193,12 @@ rule align_reads_to_final_contigs:
 
 rule pileup_contigs_sample:
     input:
-        fasta="{sample}/{sample}_contigs.fasta",
-        bam="{sample}/sequence_alignment/{sample}.bam",
+        fasta=get_assembly,
+        bam="Assembly/alignments/{sample}.bam",
     output:
-        covhist="Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_histogram.txt",
-        covstats="Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_stats.txt",
-        bincov="Intermediate/Assembly/{sample}/contig_stats/postfilter_coverage_binned.txt",
+        covhist="Intermediate/Assembly/contig_stats/{sample}_coverage_histogram.txt",
+        covstats="Intermediate/Assembly/contig_stats/{sample}_coverage_stats.txt",
+        bincov="Intermediate/Assembly/contig_stats/{sample}_coverage_binned.txt",
     params:
         pileup_secondary=(
             "t"
@@ -245,77 +243,6 @@ rule create_bam_index:
         "samtools index {input}"
 
 
-rule predict_genes:
-    input:
-        "{sample}/{sample}_contigs.fasta",
-    output:
-        fna="{sample}/annotation/predicted_genes/{sample}.fna",
-        faa="{sample}/annotation/predicted_genes/{sample}.faa",
-        gff="{sample}/annotation/predicted_genes/{sample}.gff",
-    conda:
-        "../envs/prodigal.yaml"
-    log:
-        "{sample}/logs/gene_annotation/prodigal.txt",
-    benchmark:
-        "logs/benchmarks/prodigal/{sample}.txt"
-    threads: 1
-    resources:
-        mem=config["simplejob_mem"],
-        time=config["runtime_simplejob"],
-    shell:
-        """
-        prodigal -i {input} -o {output.gff} -d {output.fna} \
-            -a {output.faa} -p meta -f gff 2> {log}
-        """
-
-
-localrules:
-    get_contigs_from_gene_names,
-
-
-rule get_contigs_from_gene_names:
-    input:
-        faa="{sample}/annotation/predicted_genes/{sample}.faa",
-    output:
-        tsv="{sample}/annotation/predicted_genes/{sample}.tsv",
-    run:
-        header = [
-            "gene_id",
-            "Contig",
-            "Gene_nr",
-            "Start",
-            "Stop",
-            "Strand",
-            "Annotation",
-        ]
-        with open(output.tsv, "w") as tsv:
-            tsv.write("\t".join(header) + "\n")
-            with open(input.faa) as fin:
-                gene_idx = 0
-                for line in fin:
-                    if line[0] == ">":
-                        text = line[1:].strip().split(" # ")
-                        old_gene_name = text[0]
-                        text.remove(old_gene_name)
-                        old_gene_name_split = old_gene_name.split("_")
-                        gene_nr = old_gene_name_split[-1]
-                        contig_nr = old_gene_name_split[-2]
-                        sample = "_".join(
-                            old_gene_name_split[: len(old_gene_name_split) - 2]
-                        )
-                        tsv.write(
-                            "{gene_id}\t{sample}_{contig_nr}\t{gene_nr}\t{text}\n".format(
-                                text="\t".join(text),
-                                gene_id=old_gene_name,
-                                i=gene_idx,
-                                sample=sample,
-                                gene_nr=gene_nr,
-                                contig_nr=contig_nr,
-                            )
-                        )
-                        gene_idx += 1
-                        #
-
 
 
 localrules:
@@ -325,17 +252,17 @@ localrules:
 rule combine_contig_stats:
     input:
         contig_stats=expand(
-            "Intermediate/Assembly/{sample}/contig_stats/final_contig_stats.txt", sample=get_all_samples()
+            "Intermediate/Assembly/contig_stats/{sample}/final_contig_stats.txt", sample=get_all_samples()
         ),
         gene_tables=expand(
-            "{sample}/annotation/predicted_genes/{sample}.tsv", sample=get_all_samples()
+            "Intermediate/Assembly/annotations/genes/{sample}.tsv", sample=get_all_samples()
         ),
         mapping_logs=expand(
             "{sample}/logs/assembly/calculate_coverage/pilup_final_contigs.log",
             sample=get_all_samples(),
         ),
         # mapping logs will be incomplete unless we wait on alignment to finish
-        bams=expand("{sample}/sequence_alignment/{sample}.bam", sample=get_all_samples()),
+        bams=expand("Assembly/alignments/{sample}.bam", sample=get_all_samples()),
     output:
         combined_contig_stats="stats/combined_contig_stats.tsv",
     params:

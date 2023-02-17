@@ -54,7 +54,7 @@ rule run_megahit:
             assembly_preprocessing_steps=assembly_preprocessing_steps,
         ),
     output:
-        temp("Intermediate/Assembly/{sample}/megahit/{sample}_prefilter.contigs.fa"),
+        temp("Intermediate/Assembly/megahit/{sample}/{sample}_prefilter.contigs.fa"),
     benchmark:
         "logs/benchmarks/assembly/megahit/{sample}.txt"
     log:
