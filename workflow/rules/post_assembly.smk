@@ -12,7 +12,7 @@ else:
         output:
             bam=temp("Intermediate/Assembly/filtering/{sample}_alignment_to_prefilter_contigs.bam"),
         params:
-            extra="-x sr",
+            extra= config["minimap_extra"],
         log:
             "{sample}/logs/assembly/post_process/align_reads_to_prefiltered_contigs.log",
         threads: config["threads"]
@@ -165,7 +165,7 @@ rule align_reads_to_final_contigs:
     output:
         bam="Assembly/alignments/{sample}.bam",
     params:
-        extra="-x sr",
+        extra=config["minimap_extra"],
         sorting="coordinate",
     benchmark:
         "logs/benchmarks/assembly/align_reads/{sample}.txt"

@@ -122,5 +122,7 @@ minimum_mapped_reads: 0
 # Mapping reads to contigs
 #--------------------------
 # contig_min_id: 0.9 # not used
+
+minimap_extra: ""-x sr""
 count_multi_mapped_reads: false
 contig_map_paired_only: true
