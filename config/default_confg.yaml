@@ -35,7 +35,7 @@ tmpdir: /tmp
 
 
 
-data_type: metagenome # metagenome or metatranscriptome
+
 # interleaved_fastqs: false
 
 
@@ -43,7 +43,7 @@ data_type: metagenome # metagenome or metatranscriptome
 # Pre-assembly-processing
 ########################
 
-normalize_reads_before_assembly: false
+normalize_reads_before_assembly: false # no longer implemented
 
 # Advanced Error correction
 error_correction_before_assembly : true
@@ -120,7 +120,7 @@ minimum_mapped_reads: 0
 
 # Mapping reads to contigs
 #--------------------------
-contig_min_id: 0.9
+contig_min_id: 0.9 ## Not shure if it is used
 count_multi_mapped_reads: false
 contig_map_paired_only: true
 contig_max_distance_between_pairs: 1000

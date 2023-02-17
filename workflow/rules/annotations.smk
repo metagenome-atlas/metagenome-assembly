@@ -2,11 +2,11 @@
 
 rule predict_genes:
     input:
-        get_assembly,
+        final_assembly,
     output:
-        fna="Intermediate/Assembly/annotations/genes/{sample}.fna",
-        faa="Intermediate/Assembly/annotations/genes/{sample}.faa",
-        gff="Intermediate/Assembly/annotations/genes/{sample}.gff",
+        fna="Assembly/annotations/genes/{sample}.fna",
+        faa="Assembly/annotations/genes/{sample}.faa",
+        gff="Assembly/annotations/genes/{sample}.gff",
     conda:
         "../envs/prodigal.yaml"
     log:
@@ -30,9 +30,9 @@ localrules:
 
 rule get_contigs_from_gene_names:
     input:
-        faa="Intermediate/Assembly/annotations/genes/{sample}.faa",
+        faa="Assembly/annotations/genes/{sample}.faa",
     output:
-        tsv="Intermediate/Assembly/annotations/genes/{sample}.tsv",
+        tsv="Assembly/annotations/genes/{sample}.tsv",
     run:
         header = [
             "gene_id",

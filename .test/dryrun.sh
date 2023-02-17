@@ -32,11 +32,21 @@ echo "Dryrun with metaspades"
 snakemake -d $test_dir  --dryrun $@
 
 
+
+
+
 echo "Dryrun with megahit"
 
 snakemake -d $test_dir  --dryrun --config assembler="megahit" $@
 
+echo "Dryrun with filtering"
 
+snakemake -d $test_dir  --dryrun --config assembler="megahit" filter_contigs=True $@
+
+
+echo "Dryrun with different options"
+
+snakemake -d $test_dir  --dryrun --config merge_pairs_before_assembly=False $@
 
 # create folder for single ends
 set +x
@@ -63,3 +73,6 @@ echo "Dryrun with single end reads and megahit"
 
 snakemake -d $test_dir  --dryrun --config assembler="megahit" paired_end=False $@
 
+
+
+echo -e '\U0001F64C \U0001F389'

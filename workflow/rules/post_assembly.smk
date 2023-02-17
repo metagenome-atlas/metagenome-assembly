@@ -10,7 +10,7 @@ else:
             query=get_quality_controlled_reads,
             target=raw_assembly,
         output:
-            bam=temp("{sample}/sequence_alignment/alignment_to_prefilter_contigs.bam"),
+            bam=temp("Intermediate/Assembly/filtering/{sample}_alignment_to_prefilter_contigs.bam"),
         params:
             extra="-x sr",
         log:
@@ -23,10 +23,10 @@ else:
 
     rule pileup_prefilter:
         input:
-            fasta="Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
-            bam="{sample}/sequence_alignment/alignment_to_prefilter_contigs.bam",
+            fasta= raw_assembly,
+            bam= rules.align_reads_to_prefilter_contigs.output.bam,
         output:
-            covstats="Intermediate/Assembly/contig_stats/{sample}/prefilter_coverage_stats.txt",
+            covstats="Intermediate/Assembly/filtering/{sample}_prefilter_coverage_stats.txt",
         params:
             pileup_secondary="t",
         log:
@@ -48,17 +48,16 @@ else:
 
     rule filter_by_coverage:
         input:
-            fasta="Intermediate/Assembly/{sample}/{sample}_prefilter_contigs.fasta",
-            covstats="Intermediate/Assembly/contig_stats/{sample}/prefilter_coverage_stats.txt",
+            fasta= raw_assembly,
+            covstats="Intermediate/Assembly/filtering/{sample}_prefilter_coverage_stats.txt",
         output:
-            fasta="Intermediate/Assembly/{sample}/{sample}_final_contigs.fasta",
-            removed_names="Intermediate/Assembly/{sample}/{sample}_discarded_contigs.fasta",
+            fasta=temp("Intermediate/Assembly/filtering/{sample}_final_contigs.fasta"),
         params:
             minc=config["minimum_average_coverage"],
             minp=config["minimum_percent_covered_bases"],
-            minr=config.get("minimum_mapped_reads", MINIMUM_MAPPED_READS),
-            minl=config.get("minimum_contig_length", MINIMUM_CONTIG_LENGTH),
-            trim=config.get("contig_trim_bp", CONTIG_TRIM_BP),
+            minr=config["minimum_mapped_reads"],
+            minl=config["minimum_contig_length"],
+            trim=config["contig_trim_bp"],
         log:
             "{sample}/logs/assembly/post_process/filter_by_coverage.log",
         conda:
@@ -72,7 +71,6 @@ else:
             " in={input.fasta} "
             " cov={input.covstats} "
             " out={output.fasta} "
-            " outd={output.removed_names} "
             " minc={params.minc} "
             " minp={params.minp} "
             " minr={params.minr} "
@@ -89,7 +87,7 @@ rule rename_contigs:
     input:
         filtered_assembly,
     output:
-        get_assembly,
+        final_assembly,
     conda:
         "../envs/bbmap.yaml"
     threads: config["simplejob_threads"]
@@ -112,7 +110,7 @@ rule rename_contigs:
 
 rule calculate_contigs_stats:
     input:
-        lambda wc: get_assembly(wc)
+        lambda wc: final_assembly.format(**wc)
         if (wc.assembly_step == "final")
         else raw_assembly.format(**wc),
     output:
@@ -163,7 +161,7 @@ rule combine_sample_contig_stats:
 rule align_reads_to_final_contigs:
     input:
         query=get_quality_controlled_reads,
-        target=get_assembly,
+        target=final_assembly,
     output:
         bam="Assembly/alignments/{sample}.bam",
     params:
@@ -182,7 +180,7 @@ rule align_reads_to_final_contigs:
 
 rule pileup_contigs_sample:
     input:
-        fasta=get_assembly,
+        fasta=final_assembly,
         bam="Assembly/alignments/{sample}.bam",
     output:
         covhist="Intermediate/Assembly/contig_stats/{sample}_coverage_histogram.txt",
@@ -196,7 +194,7 @@ rule pileup_contigs_sample:
         "{sample}/logs/assembly/calculate_coverage/pilup_final_contigs.log",  # This log file is uesd for report
     conda:
         "../envs/bbmap.yaml"
-    threads: config.get("threads", 1)
+    threads: config["threads"]
     resources:
         mem=config["mem"],
         java_mem=int(config["mem"] * JAVA_MEM_FRACTION),
@@ -235,11 +233,11 @@ localrules:
 rule combine_contig_stats:
     input:
         contig_stats=expand(
-            "Intermediate/Assembly/contig_stats/{sample}/final_contig_stats.txt",
+            "Intermediate/Assembly/contig_stats/{sample}_final_contig_stats.txt",
             sample=get_all_samples(),
         ),
         gene_tables=expand(
-            "Intermediate/Assembly/annotations/genes/{sample}.tsv",
+            "Assembly/annotations/genes/{sample}.tsv",
             sample=get_all_samples(),
         ),
         mapping_logs=expand(

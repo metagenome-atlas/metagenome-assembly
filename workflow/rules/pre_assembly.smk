@@ -20,7 +20,7 @@ rule init_pre_assembly_processing:
         "{sample}/logs/assembly/init.log",
     conda:
         "../envs/bbmap.yaml"
-    threads: config.get("simplejob_threads", 1)
+    threads: config["simplejob_threads"]
     resources:
         mem=config["simplejob_mem"],
         java_mem=int(config["simplejob_mem"] * JAVA_MEM_FRACTION),
@@ -74,7 +74,7 @@ rule error_correction:
         lowdepthfraction=config["error_correction_lowdepth_fraction"],
         aggressive=config["error_correction_aggressive"],
         shave="f",  # Shave and rinse can produce substantially better assemblies for low-depth data, but they are very slow for large metagenomes.
-    threads: config.get("threads", 1)
+    threads: config["threads"]
     shell:
         "tadpole.sh -Xmx{resources.java_mem}G "
         " prefilter={params.prefilter} "
@@ -111,7 +111,7 @@ rule merge_pairs:
                 fraction=["R1", "R2", "me"],
             )
         ),
-    threads: config.get("threads", 1)
+    threads: config["threads"]
     resources:
         mem=config["mem"],
         java_mem=int(config["mem"] * JAVA_MEM_FRACTION),

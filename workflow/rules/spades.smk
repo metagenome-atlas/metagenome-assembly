@@ -2,7 +2,7 @@ from copy import deepcopy
 
 if PAIRED_END:
     ASSEMBLY_FRACTIONS = ["R1", "R2"]
-    if config.get("merge_pairs_before_assembly", True):
+    if config["merge_pairs_before_assembly"]:
         ASSEMBLY_FRACTIONS += ["me"]
 else:
     ASSEMBLY_FRACTIONS = deepcopy(MULTIFILE_FRACTIONS)
