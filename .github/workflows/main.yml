@@ -41,9 +41,9 @@ jobs:
       with:
         channels: conda-forge,bioconda,defaults
     - run: conda install -y snakemake
-    - run: ls -l ; pwd
+    - run: ls -la ; pwd
     - name: Dryrun
-      run: .test/dryrun.sh 
+      run: bash .test/dryrun.sh 
 
       
 
@@ -52,10 +52,10 @@ jobs:
     needs: 
 #      - Linting
 #      - Dryrun
-      - Formatting
+#       - Formatting
     steps:
     - uses: actions/checkout@v3
-    - run: pwd; ls -l
+    - run: pwd; ls -la
     - name: Test workflow with spades
       uses: snakemake/snakemake-github-action@v1.24.0
       with: 
