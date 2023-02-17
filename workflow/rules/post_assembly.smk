@@ -10,9 +10,11 @@ else:
             query=get_quality_controlled_reads,
             target=raw_assembly,
         output:
-            bam=temp("Intermediate/Assembly/filtering/{sample}_alignment_to_prefilter_contigs.bam"),
+            bam=temp(
+                "Intermediate/Assembly/filtering/{sample}_alignment_to_prefilter_contigs.bam"
+            ),
         params:
-            extra= config["minimap_extra"],
+            extra=config["minimap_extra"],
         log:
             "{sample}/logs/assembly/post_process/align_reads_to_prefiltered_contigs.log",
         threads: config["threads"]
@@ -23,8 +25,8 @@ else:
 
     rule pileup_prefilter:
         input:
-            fasta= raw_assembly,
-            bam= rules.align_reads_to_prefilter_contigs.output.bam,
+            fasta=raw_assembly,
+            bam=rules.align_reads_to_prefilter_contigs.output.bam,
         output:
             covstats="Intermediate/Assembly/filtering/{sample}_prefilter_coverage_stats.txt",
         params:
@@ -48,7 +50,7 @@ else:
 
     rule filter_by_coverage:
         input:
-            fasta= raw_assembly,
+            fasta=raw_assembly,
             covstats="Intermediate/Assembly/filtering/{sample}_prefilter_coverage_stats.txt",
         output:
             fasta=temp("Intermediate/Assembly/filtering/{sample}_final_contigs.fasta"),

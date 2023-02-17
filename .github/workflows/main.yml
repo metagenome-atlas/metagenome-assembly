@@ -23,7 +23,7 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Lint workflow
       uses: snakemake/snakemake-github-action@v1.24.0
       with:
@@ -35,36 +35,49 @@ jobs:
   Dryrun:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.2.0
       with:
         channels: conda-forge,bioconda,defaults
     - run: conda install -y snakemake
+    - run: snakemake --version
     - name: Dryrun
-      run: .test/dryrun.sh 
+      run: bash .test/dryrun.sh 
 
       
 
   Testing:
     runs-on: ubuntu-latest
-    needs: 
-#      - Linting
-      - Dryrun
-      - Formatting
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Test workflow
+    - uses: actions/checkout@v3
+    - run: pwd; ls -la
+    - name: Test workflow with spades
       uses: snakemake/snakemake-github-action@v1.24.0
-      with:
-        directory: .test
+      with: 
+        stagein: .test/copy_example_data.sh .test/spades
+        directory: .test/spades
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs --cores 3 --conda-cleanup-pkgs cache --all-temp"
-
-    - name: Test report
+        
+    - name: Test report spades
       uses: snakemake/snakemake-github-action@v1.24.0
       with:
-        directory: .test
+        directory: .test/spades
+        snakefile: workflow/Snakefile
+        args: "--report report.zip"
+        
+    - name: Test workflow with megahit
+      uses: snakemake/snakemake-github-action@v1.24.0
+      with: 
+        stagein: .test/copy_example_data.sh .test/megahit
+        directory: .test/megahit
+        snakefile: workflow/Snakefile
+        args: "--use-conda --show-failed-logs --cores 3 --conda-cleanup-pkgs cache --all-temp --config assembler=megahit "
+        
+    - name: Test report megahit
+      uses: snakemake/snakemake-github-action@v1.24.0
+      with:
+        directory: .test/megahit
         snakefile: workflow/Snakefile
         args: "--report report.zip"
