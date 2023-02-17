@@ -41,6 +41,8 @@ jobs:
       with:
         channels: conda-forge,bioconda,defaults
     - run: conda install -y snakemake
+    - run: cd metagenome-assembly
+    - run: ls -l
     - name: Dryrun
       run: .test/dryrun.sh 
 
