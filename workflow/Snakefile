@@ -18,6 +18,7 @@ MULTIFILE_FRACTIONS= ["R1", "R2", "se"] if PAIRED_END else ["se"]
 include: "rules/functions.smk"
 
 ## Input
+#Functions to define input files
 
 def get_quality_controlled_reads(wildcards):
 
@@ -28,12 +29,16 @@ def get_quality_controlled_reads(wildcards):
     )
 
 
-final_assembly = "Assembly/assemblies/{sample}.fasta"
+
+def get_long_reads(wildcards):
+    "Define the long read files to be used for assembly"
+    return "{sample}/sequence_quality_control/{sample}_QC_naopore.fastq.gz".format(**wildcards)
+    
 
 
 ### Target rules
 
-
+final_assembly = "Assembly/assemblies/{sample}.fasta"
 
 rule all:
     input:
@@ -71,7 +76,7 @@ include: "rules/post_assembly.smk"
 
 
 
-logger.debug(f"Assembly fractions are: {ASSEMBLY_FRACTIONS}")
+
 
 
 

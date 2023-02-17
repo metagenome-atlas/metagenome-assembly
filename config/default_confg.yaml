@@ -44,7 +44,7 @@ tmpdir: /tmp
 # Pre-assembly-processing
 ########################
 
-# normalize_reads_before_assembly: false # no longer implemented
+normalize_reads_before_assembly: false # no longer implemented
 
 # Advanced Error correction
 error_correction_before_assembly : true
@@ -123,6 +123,6 @@ minimum_mapped_reads: 0
 #--------------------------
 # contig_min_id: 0.9 # not used
 
-minimap_extra: ""-x sr""
+minimap_extra: " -x sr "
 count_multi_mapped_reads: false
 contig_map_paired_only: true

@@ -18,7 +18,7 @@ for sample in sample1 sample2 sample3; do
 
     qc_folder="$test_dir/$sample/sequence_quality_control/"
     mkdir -p "$qc_folder"
-    for fraction in R1 R2 se ;
+    for fraction in R1 R2 se nanopore ;
     do
         touch "$qc_folder/${sample}_QC_${fraction}.fastq.gz"
     done
@@ -47,6 +47,16 @@ snakemake -d $test_dir  --dryrun --config assembler="megahit" filter_contigs=Tru
 echo "Dryrun with different options"
 
 snakemake -d $test_dir  --dryrun --config merge_pairs_before_assembly=False $@
+
+
+echo "Dryrun with nanopore reads"
+
+snakemake -d $test_dir  --dryrun --config longread_type="nanopore" $@
+
+
+
+
+
 
 # create folder for single ends
 set +x
