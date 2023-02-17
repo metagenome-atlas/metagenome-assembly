@@ -11,7 +11,7 @@ jobs:
   Formatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Formatting
         uses: github/super-linter@v4
         env:
@@ -23,7 +23,7 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Lint workflow
       uses: snakemake/snakemake-github-action@v1.24.0
       with:
@@ -35,14 +35,13 @@ jobs:
   Dryrun:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.2.0
       with:
         channels: conda-forge,bioconda,defaults
     - run: conda install -y snakemake
-    - run: cd metagenome-assembly
-    - run: ls -l
+    - run: ls -l ; pwd
     - name: Dryrun
       run: .test/dryrun.sh 
 
@@ -55,7 +54,8 @@ jobs:
 #      - Dryrun
       - Formatting
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - run: pwd; ls -l
     - name: Test workflow with spades
       uses: snakemake/snakemake-github-action@v1.24.0
       with: 
