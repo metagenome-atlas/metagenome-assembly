@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
 #      - Linting
-#      - Dryrun
+      - Dryrun
 #       - Formatting
     steps:
     - uses: actions/checkout@v3
