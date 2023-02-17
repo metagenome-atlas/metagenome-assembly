@@ -39,9 +39,8 @@ jobs:
     - name: Setup Miniconda
       uses: conda-incubator/setup-miniconda@v2.2.0
       with:
-        mamba-version: "*"
         channels: conda-forge,bioconda,defaults
-    - run: mamba install -y snakemake
+    - run: conda install -y snakemake
     - name: Dryrun
       run: .test/dryrun.sh 
 
