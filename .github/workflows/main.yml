@@ -30,11 +30,25 @@ jobs:
         directory: .
         snakefile: workflow/Snakefile
         args: "--lint"
+      
+      
+  Dryrun:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2.2.0
+    - run: mamba install -y snakemake
+    - name: Dryrun
+      run: .test/dryrun.sh 
+
+      
 
   Testing:
     runs-on: ubuntu-latest
     needs: 
-      - Linting
+#      - Linting
+      - Dryrun
       - Formatting
     steps:
     - uses: actions/checkout@v2
