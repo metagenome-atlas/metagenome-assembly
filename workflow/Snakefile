@@ -1,27 +1,31 @@
 from pathlib import Path
 import pandas as pd
-import os,sys
+import os, sys
 
 # absolute path to snakemake dir
 snakemake_dir = Path(workflow.snakefile).parent.resolve()
 
+
 # include default config values
-configfile: snakemake_dir.parent /"config/default_confg.yaml"
+configfile: snakemake_dir.parent / "config/default_confg.yaml"
+
 
 # global variables
 PAIRED_END = bool(config["paired_end"])
 
 logger.debug(f"Reads are: {'paired' if PAIRED_END else 'single-end'}")
 
-MULTIFILE_FRACTIONS= ["R1", "R2"] if PAIRED_END else ["se"]
+MULTIFILE_FRACTIONS = ["R1", "R2"] if PAIRED_END else ["se"]
+
 
 include: "rules/functions.smk"
 
+
 ## Input
-#Functions to define input files
+# Functions to define input files
+
 
 def get_quality_controlled_reads(wildcards):
-
     return expand(
         "{sample}/sequence_quality_control/{sample}_QC_{fraction}.fastq.gz",
         fraction=MULTIFILE_FRACTIONS,
@@ -29,53 +33,58 @@ def get_quality_controlled_reads(wildcards):
     )
 
 
-
 def get_long_reads(wildcards):
     "Define the long read files to be used for assembly"
-    return "{sample}/sequence_quality_control/{sample}_QC_naopore.fastq.gz".format(**wildcards)
-    
+    return "{sample}/sequence_quality_control/{sample}_QC_naopore.fastq.gz".format(
+        **wildcards
+    )
 
 
 ### Target rules
 
 final_assembly = "Assembly/assemblies/{sample}.fasta"
 
+
 rule all:
     input:
-        assemblies= expand(final_assembly, sample=get_all_samples()),
-        bams = expand("Assembly/alignments/{sample}.bam",sample=get_all_samples()),
-        genes = expand("Assembly/annotations/genes/{sample}{ext}" , ext=[".faa", ".fna",".tsv"],sample=get_all_samples()),
-        stats= "stats/combined_contig_stats.tsv"
+        assemblies=expand(final_assembly, sample=get_all_samples()),
+        bams=expand("Assembly/alignments/{sample}.bam", sample=get_all_samples()),
+        genes=expand(
+            "Assembly/annotations/genes/{sample}{ext}",
+            ext=[".faa", ".fna", ".tsv"],
+            sample=get_all_samples(),
+        ),
+        stats="stats/combined_contig_stats.tsv",
     output:
         temp(touch("finished_assembly")),
-
 
 
 # decide wich assembler to use
 
 if config["assembler"] == "megahit":
-    
-    include: "rules/megahit.smk"
-    raw_assembly = "Intermediate/Assembly/megahit/{sample}/{sample}_prefilter.contigs.fa"
+    raw_assembly = (
+        "Intermediate/Assembly/megahit/{sample}/{sample}_prefilter.contigs.fa"
+    )
 
 elif config["assembler"] == "spades":
-    include: "rules/spades.smk"
     raw_assembly = "Intermediate/Assembly/spades/{sample}/scaffolds.fasta"
-
 
 else:
     raise ValueError("Invalid assembler specified in config file")
 
+
+if config["assembler"] == "megahit":
+
+    include: "rules/megahit.smk"
+
+elif config["assembler"] == "spades":
+
+    include: "rules/spades.smk"
+
+
 ### Rules
+
+
 include: "rules/pre_assembly.smk"
 include: "rules/annotations.smk"
 include: "rules/post_assembly.smk"
-
-
-
-
-
-
-
-
-
