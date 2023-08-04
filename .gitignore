@@ -5,3 +5,4 @@ logs/**
 .snakemake/**
 .test/**
 !.test/dryrun.sh
+!.test/copy_example_data.sh
