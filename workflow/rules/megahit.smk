@@ -99,3 +99,28 @@ rule run_megahit:
 
 
 # TODO: is it necessary to remove the output dir
+
+
+# standardizes header labels within contig FASTAs
+rule rename_megahit_contigs:
+    input:
+        rules.run_megahit.output[0]
+    output:
+        final_assembly,
+    conda:
+        "../envs/bbmap.yaml"
+    threads: config["simplejob_threads"]
+    resources:
+        mem=config["simplejob_mem"],
+        time=config["runtime_simplejob"],
+    log:
+        "logs/assembly/post_process/rename_and_filter_size/{sample}.log",
+    params:
+        minlength=config["minimum_contig_length"],
+    shell:
+        "rename.sh "
+        " in={input} out={output} ow=t "
+        " prefix={wildcards.sample} "
+        " minscaf={params.minlength} &> {log} "
+
+# TODO: start with 1 not zero

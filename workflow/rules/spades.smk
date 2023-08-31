@@ -1,3 +1,6 @@
+SPADES_DIR= "Intermediate/Assembly/spades/{sample}"
+
+
 from copy import deepcopy
 
 if PAIRED_END:
@@ -16,12 +19,31 @@ else:
 assembly_params["spades"] = {"meta": "--meta", "normal": "", "rna": "--rna"}
 
 
+def spades_input(wc,input):
+    if (Path(SPADES_DIR.format(**wc))/"params.txt").exists():
+
+        return " --restart-from last "
+    
+    else:
+
+        
+
+
 def spades_parameters(wc, input):
-    if not os.path.exists(
-        "Intermediate/Assembly/{sample}/params.txt".format(sample=wc.sample)
-    ):
+    if (Path(SPADES_DIR.format(**wc))/"params.txt").exists():
+
+        params = {
+            "inputs": "--restart-from last",
+            "preset": "",
+            "skip_error_correction": "",
+            "extra": "",
+            "longreads": "",
+        }
+
+    else:
         params = {}
 
+        # intputs
         reads = dict(zip(ASSEMBLY_FRACTIONS, input))
 
         if not PAIRED_END:
@@ -52,16 +74,6 @@ def spades_parameters(wc, input):
         )
         params["extra"] = config["spades_extra"]
 
-    else:
-        params = {
-            "inputs": "--restart-from last",
-            "preset": "",
-            "skip_error_correction": "",
-            "extra": "",
-            "longreads": "",
-        }
-
-    params["outdir"] = "Intermediate/Assembly/spades/{sample}".format(sample=wc.sample)
 
     return params
 
@@ -74,12 +86,16 @@ rule run_spades:
             assembly_preprocessing_steps=assembly_preprocessing_steps,
         ),
     output:
-        "Intermediate/Assembly/spades/{sample}/contigs.fasta",
-        "Intermediate/Assembly/spades/{sample}/scaffolds.fasta",
+
+        multiext("Intermediate/Assembly/spades/{sample}/", "contigs.fasta", "scaffolds.fasta",
+        "assembly_graph_with_scaffolds.gfa",
+        "scaffolds.paths",
+        "contig.paths")
     benchmark:
         "logs/benchmarks/assembly/spades/{sample}.txt"
     params:
         p=lambda wc, input: spades_parameters(wc, input),
+        outdir = SPADES_DIR,
         k=config["spades_k"],
     log:
         "{sample}/logs/assembly/spades.log",
@@ -96,7 +112,7 @@ rule run_spades:
         "spades.py "
         " --threads {threads} "
         " --memory {resources.mem} "
-        " -o {params.p[outdir]} "
+        " -o {params.outdir} "
         " -k {params.k}"
         " {params.p[preset]} "
         " {params.p[extra]} "
@@ -104,3 +120,30 @@ rule run_spades:
         " {params.p[longreads]} "
         " {params.p[skip_error_correction]} "
         " >> {log} 2>&1 "
+
+
+
+# standardizes header labels within contig FASTAs
+rule rename_spades_output:
+    input:
+        rules.run_spades.output
+    output:
+        multiext("Intermediate/Assembly/spades/{sample}/", "contigs.fasta", "scaffolds.fasta",
+        "assembly_graph_with_scaffolds.gfa",
+        "scaffolds.paths",
+        "contig.paths"),
+    conda:
+        "../envs/bbmap.yaml"
+    threads: config["simplejob_threads"]
+    resources:
+        mem=config["simplejob_mem"],
+        time=config["runtime_simplejob"],
+    log:
+        "logs/assembly/post_process/rename_and_filter_size/{sample}.log",
+    params:
+        minlength=config["minimum_contig_length"],
+    shell:
+        "rename.sh "
+        " in={input} out={output} ow=t "
+        " prefix={wildcards.sample} "
+        " minscaf={params.minlength} &> {log} "

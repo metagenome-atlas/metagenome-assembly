@@ -1,26 +1,4 @@
 
-# standardizes header labels within contig FASTAs
-rule rename_contigs:
-    input:
-        filtered_assembly,
-    output:
-        final_assembly,
-    conda:
-        "../envs/bbmap.yaml"
-    threads: config["simplejob_threads"]
-    resources:
-        mem=config["simplejob_mem"],
-        time=config["runtime_simplejob"],
-    log:
-        "logs/assembly/post_process/rename_and_filter_size_{sample}/.log",
-    params:
-        minlength=config["minimum_contig_length"],
-    shell:
-        "rename.sh "
-        " in={input} out={output} ow=t "
-        " prefix={wildcards.sample} "
-        " minscaf={params.minlength} &> {log} "
-
 
 #### contig stats
 
